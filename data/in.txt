@@ -1,0 +1,11 @@
+assemblygap,1.0
+coppergap,0.07
+silkscreenlen,0.4
+assembly
+line,1.55,1.55,1.55,3.55
+line,1.55,3.55,2.55,3.55
+line,2.55,3.55,2.55,2.55
+line,2.55,2.55,3.55,2.55
+line,3.55,2.55,3.55,1.55
+line,3.55,1.55,1.55,1.55
+copper
