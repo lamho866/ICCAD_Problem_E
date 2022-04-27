@@ -1,6 +1,5 @@
 #include <bits/stdc++.h>
 using namespace std;
-#define PI 3.14159265
 
 void readLine(char *s){
     char tap[20];
