@@ -1,5 +1,6 @@
 #include <bits/stdc++.h>
 using namespace std;
+#define PI 3.14159265
 
 void readLine(char *s){
     char tap[20];
@@ -15,38 +16,23 @@ void readarc(char *s){
     printf("arc: %lf,%lf,%lf,%lf,%lf,%lf, %s\n", x1, y1, x2, y2, rx, ry, tap);
 }
 
-
-
 class Line
 {
 public:
     bool isLine, isCW; //CW or CCW 
     double x1, y1, x2, y2, rx, ry;
-    double slope;
     char tap[5];
 
     Line(bool _isLine, double _x1, double _y1, double _x2, double _y2, double _rx = 0.0, double _ry = 0.0, bool _isCW = false)
      : isLine(_isLine), x1(_x1), y1(_y1), x2(_x2), y2(_y2), rx(_rx), ry(_ry), isCW(_isCW)
-     {
-         //if the line is horizontal slope is -1
-         if(x1 == x2) slope = -1.0;
-         else slope = (y1 - y2) / (x1 - x2);
-
-     }
-
+     {}
 
     double dist(){
         return sqrt((x1 - x2)*(x1 - x2) + (y1 -y2)*(y1 - y2));
     }
 };
 
-bool isTurnLeft(Line a, Line b){
-    double OA_x = a.x2 - a.x1, OA_y = a.y2 - a.y1;
-    double OB_x = b.x2 - a.x1, OB_y = b.y2 - a.y1;
-    return (OA_x * OB_y - OB_x * OA_y) >= 0;
-}
-
-void connectAB(Line &a, Line &b){
+void connectLineAB(Line &a, Line &b){
     double a1, b1, c1, a2, b2, c2;
     double D, Dx, Dy;
     a1 = a.y1 - a.y2, b1 = -a.x1 + a.x2;
@@ -90,23 +76,16 @@ public:
 
 void addOutLine(Polygom &outline, Line &a, Line &b, double assemblygap){
     double addX, addY;
-    if(isTurnLeft(a, b)){
-        //CW
-        addX = (a.y2 - a.y1) / a.dist() * assemblygap;
-        addY = -(a.x2 - a.x1) / a.dist() * assemblygap;
-    }else{
-        //CWW
-        addX = -(a.y2 - a.y1) / a.dist() * assemblygap;
-        addY = (a.x2 - a.x1) / a.dist() * assemblygap;
-    }
+    addX = -(a.y2 - a.y1) / a.dist() * assemblygap;
+    addY = (a.x2 - a.x1) / a.dist() * assemblygap;
     outline.shape.push_back(Line(true, a.x1 + addX, a.y1 + addY, a.x2 + addX, a.y2 + addY));
 }
 
-void printPolyShape(Polygom &poly){
-    printf("x = [");
+void printPolyShape(Polygom &poly, string s){
+    printf("%s_x = [", s.c_str());
     for(int i = 0; i < poly.shape.size(); ++i)
         printf("%lf, %lf, ", poly.shape[i].x1, poly.shape[i].x2);
-    printf("]\ny = [") ;
+    printf("]\n%s_y = [", s.c_str()) ;
     for(int i = 0; i  < poly.shape.size(); ++i)
         printf("%lf, %lf, ", poly.shape[i].y1, poly.shape[i].y2);
     printf("]\n");
@@ -121,10 +100,10 @@ void drawThePolygonOffsetting(Polygom &assembly, double const assemblygap){
 
     //connect the line
     for(int i = 0; i < outline.shape.size() - 1; ++i)
-        connectAB(outline.shape[i], outline.shape[i + 1]);
-    connectAB(outline.shape[outline.shape.size() - 1], outline.shape[0]);
+        connectLineAB(outline.shape[i], outline.shape[i + 1]);
+    connectLineAB(outline.shape[outline.shape.size() - 1], outline.shape[0]);
 
-    printPolyShape(outline);
+    printPolyShape(outline, "new");
 }
 
 int main(){
@@ -162,7 +141,7 @@ int main(){
         cropperList[cropSize].addLine(str);
     }
 
-    printPolyShape(assembly);
+    printPolyShape(assembly, "org");
     printf("assemblygap : %lf\n", assemblygap);
     drawThePolygonOffsetting(assembly, assemblygap);
 }
