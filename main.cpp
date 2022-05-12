@@ -13,6 +13,7 @@
 #include <boost/geometry/algorithms/envelope.hpp>
 
 using namespace std;
+#define PI 3.14159265
 
 namespace bg = boost::geometry;
 typedef bg::model::d2::point_xy<double> BoostPoint;
@@ -28,11 +29,52 @@ boost::geometry::strategy::buffer::side_straight side_strategy;
 
 class Cycle
 {
+private:
+	double dist(double x, double y) {
+		return sqrt((x - rx) * (x - rx) + (y - ry) * (y - ry));
+	}
 public: //CW or CCW 
-	double x1, y1, x2, y2, rx, ry;
+	const double rDegSt = 15.0;
+	double x1, y1, x2, y2, rx, ry, r;
 	Cycle(double _x1, double _y1, double _x2, double _y2, double _rx, double _ry)
-		:x1(_x1), y1(_y1), x2(_x2), y2(_y2), rx(_rx), ry(_ry){}
+		:x1(_x1), y1(_y1), x2(_x2), y2(_y2), rx(_rx), ry(_ry) {
+		r = dist(x1, y1);
+	}
+	double deg(bool isCW) {
+		if (x1 == x2 && y1 == y2)
+			return 0.0;
 
+		if (x1 == x2 || y1 == y2)
+			return 180.0;
+
+		double va_x = x1 - rx, va_y = y1 - ry;
+		double vb_x = x2 - rx, vb_y = y2 - ry;
+		double params = va_x * vb_y - va_y * vb_x;
+
+		params /= dist(x1, y1);
+		params /= dist(x2, y2);
+
+		double degParams = asin(params) * 180 / PI;
+		if (isCW) {
+			if (degParams < 0) return -degParams;
+			return 180 + degParams;
+		}
+		//CWW
+		if (degParams < 0) return  degParams + 360;
+		return degParams;
+	}
+
+	void rotationPt(double curX, double curY, double &nxtX, double &nxtY, bool isCW) {
+		curX -= rx;
+		curY -= ry;
+		//the rotation is around the origin point
+		double rDeg = (isCW) ? -rDegSt : rDegSt;
+		nxtX = curX * cos(rDeg*PI / 180) - curY * sin(rDeg*PI / 180);
+		nxtY = curX * sin(rDeg*PI / 180) + curY * cos(rDeg*PI / 180);
+
+		nxtX += rx;
+		nxtY += ry;
+	}
 };
 
 class Polygom {
@@ -55,13 +97,21 @@ public:
 					s[i] = ' ';
 			char x1[10], x2[10], rx[10], y1[10], y2[10], ry[10], tap[10];
 			sscanf(s.c_str() + 4, "%s %s %s %s %s %s %s", x1, y1, x2, y2, rx, ry, tap);
-			shape += boost::lexical_cast<std::string>(x1) + ' ' + boost::lexical_cast<std::string>(y1) + ',' + boost::lexical_cast<std::string>(x2) + ' ' + boost::lexical_cast<std::string>(y2) + ',';
-			if (strcmp(tap, "CW") == 0)
-				cw.push_back(Cycle(atof(x1), atof(y1), atof(x2), atof(y2), atof(rx), atof(ry)));
-			else 
-				ccw.push_back(Cycle(atof(x1), atof(y1), atof(x2), atof(y2), atof(rx), atof(ry)));
+			///printf("arc: %s %s %s %s %s %s %s ", x1, y1, x2, y2, rx, ry);
+			shape += boost::lexical_cast<std::string>(x1) + ' ' + boost::lexical_cast<std::string>(y1) + ',';
+			Cycle c(atof(x1), atof(y1), atof(x2), atof(y2), atof(rx), atof(ry));
+
+			double curX, curY, nxtX, nxtY;
+			bool isCW = strcmp(tap, "CW") == 0;
+			double maxDeg = c.deg(isCW);
+			curX = c.x1, curY = c.y1;
+			for (double param = c.rDegSt; param < maxDeg - c.rDegSt; param += c.rDegSt) {
+				c.rotationPt(curX, curY, nxtX, nxtY, isCW);
+				shape += boost::lexical_cast<std::string>(nxtX) + ' ' + boost::lexical_cast<std::string>(nxtY) + ',';
+				curX = nxtX, curY = nxtY;
+			}
 		}
-		
+
 	}
 	Polygom() {}
 };
@@ -82,21 +132,6 @@ void makeThePolygonShape(BoostPolygon &bgPlogom, Polygom &polyShape) {
 
 	polyShape.shape[polyShape.shape.size() - 1] = ' ';
 	bg::read_wkt("POLYGON((" + polyShape.shape + "))", bgPlogom);
-
-	//different part
-	for (int i = 0; i < polyShape.ccw.size(); ++i) {
-		makeCycle(polyShape.ccw[i], diffCycle);
-		bg::difference(bgPlogom, diffCycle.front(), result);
-		if(result.size() > 0)
-			bgPlogom = result[0];
-	}
-	
-	for (int i = 0; i < polyShape.cw.size(); ++i) {
-		makeCycle(polyShape.ccw[i], unionCycle);
-		bg::union_(bgPlogom, diffCycle.front(), result);
-		if (result.size() > 0)
-			bgPlogom = result[0];
-	}
 }
 
 
