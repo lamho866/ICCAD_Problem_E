@@ -135,10 +135,6 @@ void makeLine(Polygom &polyShape, BoostLineString &bgLineStr) {
 	bg::read_wkt("LINESTRING(" + polyShape.shape + ")", bgLineStr);
 }
 
-void buildAssemblyLine() {
-
-}
-
 void buildAssemblyLine(Polygom &assembly, const double assemblygap, BoostMultiLineString multiCropperLs, const double croppergap, BoostMultipolygon &cropperMulLsBuffer, vector<BoostLineString> &bgDiff){
 	BoostMultiLineString assemblyMultLine;
 	BoostLineString assemblyLs;
@@ -230,7 +226,6 @@ int main()
 		mapper.add(bgAssembly);
 		mapper.add(multBGCropper);
 		mapper.add(cropperMulLsBuffer);
-
 
 		for (int i = 0; i < bgDiff.size(); ++i) {
 			if (bg::within(bgDiff[i], multBGCropper) == false) {
