@@ -135,6 +135,35 @@ void makeLine(Polygom &polyShape, BoostLineString &bgLineStr) {
 	bg::read_wkt("LINESTRING(" + polyShape.shape + ")", bgLineStr);
 }
 
+void buildAssemblyLine() {
+
+}
+
+void buildAssemblyLine(Polygom &assembly, const double assemblygap, BoostMultiLineString multiCropperLs, const double croppergap, BoostMultipolygon &cropperMulLsBuffer, vector<BoostLineString> &bgDiff){
+	BoostMultiLineString assemblyMultLine;
+	BoostLineString assemblyLs;
+	makeLine(assembly, assemblyLs);
+	//make the outline
+	BoostMultipolygon assemblyOutLs;
+	bg::strategy::buffer::distance_symmetric<double> assemblygap_dist_strategy(assemblygap / 10.0);
+	boost::geometry::buffer(assemblyLs, assemblyOutLs, assemblygap_dist_strategy, side_strategy, join_strategy, end_strategy, point_strategy);
+
+	assert(assemblyOutLs.size() == 1);
+	string strLs = boost::lexical_cast<std::string>(bg::wkt(assemblyOutLs.front()));
+	string outLineStrLs = strLs.substr(9, strLs.find("),(") - 9);
+	bg::read_wkt("LINESTRING(" + outLineStrLs + ")", assemblyLs);
+	assemblyMultLine.push_back(assemblyLs);
+
+	//Draw the multCropperOutline
+	BoostMultiLineString cropperMultLine;
+	BoostLineString cropperLs;
+	bg::strategy::buffer::distance_symmetric<double> cropper_dist_strategy(croppergap);
+	boost::geometry::buffer(multiCropperLs, cropperMulLsBuffer, cropper_dist_strategy, side_strategy, join_strategy, end_strategy, point_strategy);
+	
+	//difference
+	bg::difference(assemblyMultLine, cropperMulLsBuffer, bgDiff);
+}
+
 int main()
 {
 	Polygom assembly;
@@ -142,9 +171,12 @@ int main()
 
 	vector<Polygom> cropperList;
 	BoostMultipolygon multBGCropper;
+	BoostMultipolygon cropperMulLsBuffer;//
 	BoostMultiLineString multiCropperLs;
 	BoostPolygon cropper;
 	BoostLineString cropperLs;
+
+	vector<BoostLineString> bgDiff;
 
 	string str;
 	double assemblygap, croppergap, silkscreenlen;
@@ -156,8 +188,6 @@ int main()
 	//printf("assemblygap: %lf\n", assemblygap);
 	input >> str;
 	croppergap = atof(str.substr(10).c_str());
-	printf("croppergap: %lf\n", croppergap);
-	printf("\n--------------------------------------------\n\n");
 	//sscanf(str, "%lf", &croppergap);
 	input >> str;
 	//sscanf(str, "%lf", &silkscreenlen);
@@ -191,78 +221,26 @@ int main()
 	makeLine(cropperList[cropSize], cropperLs);
 	multBGCropper.push_back(cropper);
 	multiCropperLs.push_back(cropperLs);
-
-	BoostMultiLineString assemblyMultLine;
-	BoostLineString assemblyLs;
-	makeLine(assembly, assemblyLs);
-	//make the outline
-	BoostMultipolygon assemblyOutLs;
-	bg::strategy::buffer::distance_symmetric<double> assemblygap_dist_strategy(assemblygap / 10.0);
-	boost::geometry::buffer(assemblyLs, assemblyOutLs, assemblygap_dist_strategy, side_strategy, join_strategy, end_strategy, point_strategy);
-
-	printf("=Buffer assemblyOutls----------------------+\n");
-	cout << bg::dsv(assemblyOutLs) << endl;
-	cout << "Size : " << assemblyOutLs.size() << endl;
-
-	assert(assemblyOutLs.size() == 1);
-	string strLs = boost::lexical_cast<std::string>(bg::wkt(assemblyOutLs.front()));
-	string outLineStrLs = strLs.substr(9, strLs.find("),(") - 9);
-	bg::read_wkt("LINESTRING(" + outLineStrLs + ")", assemblyLs);
-	assemblyMultLine.push_back(assemblyLs);
-
-	printf("+---------------------------------------+\n");
-
-	//Draw the multCropperOutline
-	BoostMultiLineString cropperMultLine;
-	BoostMultipolygon cropperMulLs;
-	bg::strategy::buffer::distance_symmetric<double> cropper_dist_strategy(croppergap);
-	boost::geometry::buffer(multiCropperLs, cropperMulLs, cropper_dist_strategy, side_strategy, join_strategy, end_strategy, point_strategy);
-	cout << "CropperMuls size : " << cropperMulLs.size() << endl;
-
-	for (int i = 0; i < cropperMulLs.size(); ++i) {
-		//assert(cropperMulLs[i].size() == 1);
-		string strLs = boost::lexical_cast<std::string>(bg::wkt(cropperMulLs[i]));
-		string outLineStrLs = strLs.substr(9, strLs.find("),(") - 9);
-		bg::read_wkt("LINESTRING(" + outLineStrLs + ")", cropperLs);
-		cropperMultLine.push_back(cropperLs);
-	}
-
-
-
-	//difference
-	vector<BoostLineString> bgDiff;
-	bg::difference(assemblyMultLine, cropperMulLs, bgDiff);
-
-
-	printf("+bgDiff-----------------------------------+\n");
-	cout << bgDiff.size() << endl;
-	printf("+-----------------------------------------+\n");
-
 	cropSize++;
+	
+	buildAssemblyLine(assembly, assemblygap, multiCropperLs, croppergap, cropperMulLsBuffer, bgDiff);
 	{
 		std::ofstream svg("output.svg");
 		boost::geometry::svg_mapper<BoostPoint> mapper(svg, 400, 400);
-		//mapper.add(assemblyOutLs);
 		mapper.add(bgAssembly);
-		//mapper.add(multBGCropper);
-		mapper.add(cropperMulLs);
-		mapper.add(cropperMultLine);
+		mapper.add(multBGCropper);
+		mapper.add(cropperMulLsBuffer);
 
-		
+
 		for (int i = 0; i < bgDiff.size(); ++i) {
 			if (bg::within(bgDiff[i], multBGCropper) == false) {
 				mapper.add(bgDiff[i]);
 				mapper.map(bgDiff[i], "fill-opacity:0.5;fill:rgb(153,204,0);stroke:rgb(153,204,0);stroke-width:2");
-				printf("+LineFace---------------------------------+\n");
-				cout << bg::dsv(bgDiff[i]) << endl;
-				printf("+-----------------------------------------+\n");
 			}
 		}
 
 		mapper.map(bgAssembly, "fill-opacity:0.5;fill:rgb(51,153,255);stroke:rgb(0,77,153);stroke-width:2");
-		//mapper.map(assemblyOutLs, "fill-opacity:0.5;fill:rgb(204, 255, 255);stroke:rgb(0, 102, 102);stroke-width:2");
 		mapper.map(multBGCropper, "fill-opacity:0.5;fill:rgb(204,153,0);stroke:rgb(202,153,0);stroke-width:2");
-		mapper.map(cropperMultLine, "fill-opacity:0.5;fill:rgb(255, 255, 153);stroke:rgb(77, 77, 0);stroke-width:2");
+		mapper.map(cropperMulLsBuffer, "fill-opacity:0.5;fill:rgb(255, 255, 153);stroke:rgb(77, 77, 0);stroke-width:2");
 	}
-	system("pause");
 }
