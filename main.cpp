@@ -178,12 +178,9 @@ int main()
 
 	vector<Polygom> cropperList;
 	BoostMultipolygon multBGCropper;
-	BoostMultipolygon cropperMulLsBuffer;//
 	BoostMultiLineString multiCropperLs;
 	BoostPolygon cropper;
 	BoostLineString cropperLs;
-
-	vector<BoostLineString> bgDiff;
 
 	string str;
 	double assemblygap, croppergap, silkscreenlen;
@@ -229,7 +226,10 @@ int main()
 	multiCropperLs.push_back(cropperLs);
 	cropSize++;
 	
+	vector<BoostLineString> bgDiff;
+	BoostMultipolygon cropperMulLsBuffer;
 	buildAssemblyLine(assembly, assemblygap, multiCropperLs, croppergap, cropperMulLsBuffer, bgDiff);
+
 	{
 		std::ofstream svg("output.svg");
 		boost::geometry::svg_mapper<BoostPoint> mapper(svg, 400, 400);
