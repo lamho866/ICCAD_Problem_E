@@ -135,29 +135,40 @@ void makeLine(Polygom &polyShape, BoostLineString &bgLineStr) {
 	bg::read_wkt("LINESTRING(" + polyShape.shape + ")", bgLineStr);
 }
 
-void buildAssemblyLine(Polygom &assembly, const double assemblygap, BoostMultiLineString multiCropperLs, const double croppergap, BoostMultipolygon &cropperMulLsBuffer, vector<BoostLineString> &bgDiff){
-	BoostMultiLineString assemblyMultLine;
+void assemblyBuffer(Polygom &assembly, const double assemblygap, BoostMultiLineString &assemblyMultLine){
 	BoostLineString assemblyLs;
 	makeLine(assembly, assemblyLs);
 	//make the outline
 	BoostMultipolygon assemblyOutLs;
 	bg::strategy::buffer::distance_symmetric<double> assemblygap_dist_strategy(assemblygap / 10.0);
 	boost::geometry::buffer(assemblyLs, assemblyOutLs, assemblygap_dist_strategy, side_strategy, join_strategy, end_strategy, point_strategy);
-
+	
 	assert(assemblyOutLs.size() == 1);
 	string strLs = boost::lexical_cast<std::string>(bg::wkt(assemblyOutLs.front()));
 	string outLineStrLs = strLs.substr(9, strLs.find("),(") - 9);
 	bg::read_wkt("LINESTRING(" + outLineStrLs + ")", assemblyLs);
 	assemblyMultLine.push_back(assemblyLs);
+}
 
-	//Draw the multCropperOutline
+void multiCropperBuffer(BoostMultiLineString multiCropperLs, const double croppergap, BoostMultipolygon &cropperMulLsBuffer) {
 	BoostMultiLineString cropperMultLine;
 	BoostLineString cropperLs;
 	bg::strategy::buffer::distance_symmetric<double> cropper_dist_strategy(croppergap);
 	boost::geometry::buffer(multiCropperLs, cropperMulLsBuffer, cropper_dist_strategy, side_strategy, join_strategy, end_strategy, point_strategy);
+}
+
+void buildAssemblyLine(Polygom &assembly, const double assemblygap, BoostMultiLineString multiCropperLs, const double croppergap, BoostMultipolygon &cropperMulLsBuffer, vector<BoostLineString> &bgDiff){
+	BoostMultiLineString assemblyMultLine;
+	assemblyBuffer(assembly, assemblygap, assemblyMultLine);
+	multiCropperBuffer(multiCropperLs, croppergap, cropperMulLsBuffer);
 	
 	//difference
 	bg::difference(assemblyMultLine, cropperMulLsBuffer, bgDiff);
+}
+
+bool isLargerEnough(BoostLineString silkScreen, const double silkscreenlen) {
+	cout << "Len : " << bg::length(silkScreen) << endl;
+	return (bg::length(silkScreen)) > silkscreenlen;
 }
 
 int main()
@@ -167,12 +178,9 @@ int main()
 
 	vector<Polygom> cropperList;
 	BoostMultipolygon multBGCropper;
-	BoostMultipolygon cropperMulLsBuffer;//
 	BoostMultiLineString multiCropperLs;
 	BoostPolygon cropper;
 	BoostLineString cropperLs;
-
-	vector<BoostLineString> bgDiff;
 
 	string str;
 	double assemblygap, croppergap, silkscreenlen;
@@ -181,12 +189,11 @@ int main()
 	std::ifstream input("Problem.txt");
 	input >> str;
 	assemblygap = atof(str.substr(12).c_str());
-	//printf("assemblygap: %lf\n", assemblygap);
 	input >> str;
 	croppergap = atof(str.substr(10).c_str());
-	//sscanf(str, "%lf", &croppergap);
 	input >> str;
-	//sscanf(str, "%lf", &silkscreenlen);
+	silkscreenlen = atof(str.substr(14).c_str());
+	printf("silkscreenlen %lf\n", silkscreenlen);
 	input >> str;
 
 	double x, y;
@@ -219,7 +226,10 @@ int main()
 	multiCropperLs.push_back(cropperLs);
 	cropSize++;
 	
+	vector<BoostLineString> bgDiff;
+	BoostMultipolygon cropperMulLsBuffer;
 	buildAssemblyLine(assembly, assemblygap, multiCropperLs, croppergap, cropperMulLsBuffer, bgDiff);
+
 	{
 		std::ofstream svg("output.svg");
 		boost::geometry::svg_mapper<BoostPoint> mapper(svg, 400, 400);
@@ -228,7 +238,7 @@ int main()
 		mapper.add(cropperMulLsBuffer);
 
 		for (int i = 0; i < bgDiff.size(); ++i) {
-			if (bg::within(bgDiff[i], multBGCropper) == false) {
+			if (bg::within(bgDiff[i], multBGCropper) == false && isLargerEnough(bgDiff[i], silkscreenlen)){
 				mapper.add(bgDiff[i]);
 				mapper.map(bgDiff[i], "fill-opacity:0.5;fill:rgb(153,204,0);stroke:rgb(153,204,0);stroke-width:2");
 			}
