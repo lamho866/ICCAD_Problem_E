@@ -135,26 +135,32 @@ void makeLine(Polygom &polyShape, BoostLineString &bgLineStr) {
 	bg::read_wkt("LINESTRING(" + polyShape.shape + ")", bgLineStr);
 }
 
-void buildAssemblyLine(Polygom &assembly, const double assemblygap, BoostMultiLineString multiCropperLs, const double croppergap, BoostMultipolygon &cropperMulLsBuffer, vector<BoostLineString> &bgDiff){
-	BoostMultiLineString assemblyMultLine;
+void assemblyBuffer(Polygom &assembly, const double assemblygap, BoostMultiLineString &assemblyMultLine){
 	BoostLineString assemblyLs;
 	makeLine(assembly, assemblyLs);
 	//make the outline
 	BoostMultipolygon assemblyOutLs;
 	bg::strategy::buffer::distance_symmetric<double> assemblygap_dist_strategy(assemblygap / 10.0);
 	boost::geometry::buffer(assemblyLs, assemblyOutLs, assemblygap_dist_strategy, side_strategy, join_strategy, end_strategy, point_strategy);
-
+	
 	assert(assemblyOutLs.size() == 1);
 	string strLs = boost::lexical_cast<std::string>(bg::wkt(assemblyOutLs.front()));
 	string outLineStrLs = strLs.substr(9, strLs.find("),(") - 9);
 	bg::read_wkt("LINESTRING(" + outLineStrLs + ")", assemblyLs);
 	assemblyMultLine.push_back(assemblyLs);
+}
 
-	//Draw the multCropperOutline
+void multiCropperBuffer(BoostMultiLineString multiCropperLs, const double croppergap, BoostMultipolygon &cropperMulLsBuffer) {
 	BoostMultiLineString cropperMultLine;
 	BoostLineString cropperLs;
 	bg::strategy::buffer::distance_symmetric<double> cropper_dist_strategy(croppergap);
 	boost::geometry::buffer(multiCropperLs, cropperMulLsBuffer, cropper_dist_strategy, side_strategy, join_strategy, end_strategy, point_strategy);
+}
+
+void buildAssemblyLine(Polygom &assembly, const double assemblygap, BoostMultiLineString multiCropperLs, const double croppergap, BoostMultipolygon &cropperMulLsBuffer, vector<BoostLineString> &bgDiff){
+	BoostMultiLineString assemblyMultLine;
+	assemblyBuffer(assembly, assemblygap, assemblyMultLine);
+	multiCropperBuffer(multiCropperLs, croppergap, cropperMulLsBuffer);
 	
 	//difference
 	bg::difference(assemblyMultLine, cropperMulLsBuffer, bgDiff);
@@ -218,6 +224,8 @@ int main()
 	multBGCropper.push_back(cropper);
 	multiCropperLs.push_back(cropperLs);
 	cropSize++;
+
+
 	
 	buildAssemblyLine(assembly, assemblygap, multiCropperLs, croppergap, cropperMulLsBuffer, bgDiff);
 	{
