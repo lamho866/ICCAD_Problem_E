@@ -166,6 +166,11 @@ void buildAssemblyLine(Polygom &assembly, const double assemblygap, BoostMultiLi
 	bg::difference(assemblyMultLine, cropperMulLsBuffer, bgDiff);
 }
 
+bool isLargerEnough(BoostLineString silkScreen, const double silkscreenlen) {
+	cout << "Len : " << bg::length(silkScreen) << endl;
+	return (bg::length(silkScreen)) > silkscreenlen;
+}
+
 int main()
 {
 	Polygom assembly;
@@ -187,12 +192,11 @@ int main()
 	std::ifstream input("Problem.txt");
 	input >> str;
 	assemblygap = atof(str.substr(12).c_str());
-	//printf("assemblygap: %lf\n", assemblygap);
 	input >> str;
 	croppergap = atof(str.substr(10).c_str());
-	//sscanf(str, "%lf", &croppergap);
 	input >> str;
-	//sscanf(str, "%lf", &silkscreenlen);
+	silkscreenlen = atof(str.substr(14).c_str());
+	printf("silkscreenlen %lf\n", silkscreenlen);
 	input >> str;
 
 	double x, y;
@@ -224,8 +228,6 @@ int main()
 	multBGCropper.push_back(cropper);
 	multiCropperLs.push_back(cropperLs);
 	cropSize++;
-
-
 	
 	buildAssemblyLine(assembly, assemblygap, multiCropperLs, croppergap, cropperMulLsBuffer, bgDiff);
 	{
@@ -236,7 +238,7 @@ int main()
 		mapper.add(cropperMulLsBuffer);
 
 		for (int i = 0; i < bgDiff.size(); ++i) {
-			if (bg::within(bgDiff[i], multBGCropper) == false) {
+			if (bg::within(bgDiff[i], multBGCropper) == false && isLargerEnough(bgDiff[i], silkscreenlen)){
 				mapper.add(bgDiff[i]);
 				mapper.map(bgDiff[i], "fill-opacity:0.5;fill:rgb(153,204,0);stroke:rgb(153,204,0);stroke-width:2");
 			}
