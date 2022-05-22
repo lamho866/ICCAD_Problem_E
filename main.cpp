@@ -147,9 +147,21 @@ void makeLine(Polygom &polyShape, BoostLineString &bgLineStr) {
 	bg::read_wkt("LINESTRING(" + polyShape.shape + ")", bgLineStr);
 }
 
+void removeConnectPoint(BoostLineString &ls, const double tagX,const double tagY) {
+	for (int i = 0; i < ls.size(); ++i) {
+		if (bg::get<0>(ls[i]) == tagX && bg::get<1>(ls[i]) == tagY) {
+			ls.erase(ls.begin() + i);
+			return;
+		}
+	}
+}
+
 void assemblyBuffer(Polygom &assembly, const double assemblygap, BoostMultiLineString &assemblyMultLine) {
 	BoostLineString assemblyLs;
 	makeLine(assembly, assemblyLs);
+	double tagX = bg::get<0>(assemblyLs[0]);
+	double tagY = bg::get<1>(assemblyLs[0]);
+
 	//make the outline
 	BoostMultipolygon assemblyOutLs;
 	bg::strategy::buffer::distance_symmetric<double> assemblygap_dist_strategy(assemblygap / 10.0);
@@ -159,6 +171,10 @@ void assemblyBuffer(Polygom &assembly, const double assemblygap, BoostMultiLineS
 	string strLs = boost::lexical_cast<std::string>(bg::wkt(assemblyOutLs.front()));
 	string outLineStrLs = strLs.substr(9, strLs.find("),(") - 9);
 	bg::read_wkt("LINESTRING(" + outLineStrLs + ")", assemblyLs);
+
+	//remove the first point in the Line
+	removeConnectPoint(assemblyLs, tagX, tagY);
+	
 	assemblyMultLine.push_back(assemblyLs);
 }
 
@@ -236,9 +252,9 @@ void outputSilkscreen(ofstream &file, BoostLineString &ls, vector<BoostPolygon> 
 		bool inCycle = false;
 		for (int cIdx = 0; cIdx < cyclePolygonList.size(); ++cIdx) {
 			if (bg::within(ls[i], cyclePolygonList[cIdx])) {
-			inCycle = true;
-			intputCycle(file, cyclePolygonList[cIdx], cycleList[cIdx], ls, i);
-			break;
+				inCycle = true;
+				intputCycle(file, cyclePolygonList[cIdx], cycleList[cIdx], ls, i);
+				break;
 			}
 		}
 		if (!inCycle) drawLine(file, ls, i);
@@ -269,7 +285,7 @@ void checkoutPutResult(BoostPolygon &bgAssembly, BoostMultipolygon &multBGCroppe
 	{
 		std::ofstream svg("checkResult.svg");
 		boost::geometry::svg_mapper<BoostPoint> mapper(svg, 400, 400);
-		
+
 		mapper.add(bgAssembly);
 		mapper.add(multBGCropper);
 		mapper.add(cropperMulLsBuffer);
@@ -376,4 +392,5 @@ int main()
 	resultFile.close();
 
 	checkoutPutResult(bgAssembly, multBGCropper, cropperMulLsBuffer);
+	system("pause");
 }
