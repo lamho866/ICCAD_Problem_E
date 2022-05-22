@@ -40,8 +40,9 @@ private:
 public: //CW or CCW 
 	const double rDegSt = 15.0;
 	double x1, y1, x2, y2, rx, ry, r;
-	Cycle(double _x1, double _y1, double _x2, double _y2, double _rx, double _ry)
-		:x1(_x1), y1(_y1), x2(_x2), y2(_y2), rx(_rx), ry(_ry) {
+	bool isCW;
+	Cycle(double _x1, double _y1, double _x2, double _y2, double _rx, double _ry, bool _isCW)
+		:x1(_x1), y1(_y1), x2(_x2), y2(_y2), rx(_rx), ry(_ry), isCW(_isCW) {
 		r = dist(x1, y1);
 	}
 	double deg(bool isCW) {
@@ -79,12 +80,23 @@ public: //CW or CCW
 		nxtX += rx;
 		nxtY += ry;
 	}
+
+	void drawArcycle(const double stX, const double stY, const double endX, const double endY, const double maxDeg, bool isCW, string &shape) {
+		double curX = stX, curY = stY;
+		double nxtX, nxtY;
+		shape += boost::lexical_cast<std::string>(stX) + ' ' + boost::lexical_cast<std::string>(stY) + ',';
+		for (double param = rDegSt; param < maxDeg - rDegSt; param += rDegSt) {
+			rotationPt(curX, curY, nxtX, nxtY, isCW);
+			shape += boost::lexical_cast<std::string>(nxtX) + ' ' + boost::lexical_cast<std::string>(nxtY) + ',';
+			curX = nxtX, curY = nxtY;
+		}
+		shape += boost::lexical_cast<std::string>(endX) + ' ' + boost::lexical_cast<std::string>(endY) + ',';
+	}
 };
 
 class Polygom {
 public:
-	vector<Cycle> cw;
-	vector<Cycle> ccw;
+	vector<Cycle> cyclePt;
 	string shape;
 	void addLine(string &s) {
 		char x1[10], x2[10], rx[10], y1[10], y2[10], ry[10], tap[10];
@@ -103,20 +115,14 @@ public:
 					s[i] = ' ';
 			sscanf(s.c_str() + 4, "%s %s %s %s %s %s %s", x1, y1, x2, y2, rx, ry, tap);
 			//printf("arc: %s %s %s %s %s %s %s\n", x1, y1, x2, y2, rx, ry);
-			shape += boost::lexical_cast<std::string>(x1) + ' ' + boost::lexical_cast<std::string>(y1) + ',';
-			Cycle c(atof(x1), atof(y1), atof(x2), atof(y2), atof(rx), atof(ry));
-
 			double curX, curY, nxtX, nxtY;
 			bool isCW = strcmp(tap, "CW") == 0;
+
+			Cycle c(atof(x1), atof(y1), atof(x2), atof(y2), atof(rx), atof(ry), isCW);
+			cyclePt.push_back(c);
 			double maxDeg = c.deg(isCW);
-			curX = c.x1, curY = c.y1;
-			shape += boost::lexical_cast<std::string>(x1) + ' ' + boost::lexical_cast<std::string>(y1) + ',';
-			for (double param = c.rDegSt; param < maxDeg - c.rDegSt; param += c.rDegSt) {
-				c.rotationPt(curX, curY, nxtX, nxtY, isCW);
-				shape += boost::lexical_cast<std::string>(nxtX) + ' ' + boost::lexical_cast<std::string>(nxtY) + ',';
-				curX = nxtX, curY = nxtY;
-			}
-			shape += boost::lexical_cast<std::string>(x2) + ' ' + boost::lexical_cast<std::string>(y2) + ',';
+
+			c.drawArcycle(c.x1, c.y1, c.x2, c.y2, maxDeg, isCW, shape);
 		}
 
 	}
@@ -127,6 +133,12 @@ void makeThePolygonShape(Polygom &polyShape, BoostPolygon &bgPlogom) {
 	polyShape.shape[polyShape.shape.size() - 1] = ' ';
 	//printf("%s\n", polyShape.shape.c_str());
 	bg::read_wkt("POLYGON((" + polyShape.shape + "))", bgPlogom);
+}
+
+void makeThePolygonShape(string &shape, BoostPolygon &bgPlogom) {
+	shape[shape.size() - 1] = ' ';
+	//printf("%s\n", polyShape.shape.c_str());
+	bg::read_wkt("POLYGON((" + shape + "))", bgPlogom);
 }
 
 void makeLine(Polygom &polyShape, BoostLineString &bgLineStr) {
@@ -166,6 +178,23 @@ void buildAssemblyLine(Polygom &assembly, const double assemblygap, BoostMultiLi
 	bg::difference(assemblyMultLine, cropperMulLsBuffer, bgDiff);
 }
 
+void makeCycleEachPoint(vector<Cycle> &cyclePt, const double assemblyGap, vector<BoostPolygon> &cycleList) {
+
+	double addR = assemblyGap * 0.15;
+	for (int i = 0; i < cyclePt.size(); ++i) {
+		string shape = "";
+		BoostPolygon cycleShape;
+		Cycle c = cyclePt[i];
+		double x = c.rx + c.r;
+		double y = c.ry;
+
+		if (!c.isCW)x += addR;
+		c.drawArcycle(x, y, x, y, 360, true, shape);
+		makeThePolygonShape(shape, cycleShape);
+		cycleList.push_back(cycleShape);
+	}
+}
+
 bool isLargerEnough(BoostLineString silkScreen, const double silkscreenlen) {
 	cout << "Len : " << bg::length(silkScreen) << endl;
 	return (bg::length(silkScreen)) > silkscreenlen;
@@ -175,13 +204,85 @@ void inputPoint(ofstream &file, BoostPoint &pt) {
 	file << ',' << fixed << setprecision(4) << bg::get<0>(pt) << ',' << fixed << setprecision(4) << bg::get<1>(pt);
 }
 
-void drawLine(ofstream &file, BoostLineString &ls) {
+void inputPoint(ofstream &file, const double x, const double y) {
+	file << ',' << fixed << setprecision(4) << x << ',' << fixed << setprecision(4) << y;
+}
+
+
+void intputCycle(ofstream &file, BoostPolygon cyclePolygon, Cycle cycle, BoostLineString &ls, int &i) {
+	file << "arc";
+	inputPoint(file, ls[i]);
+	while (i < ls.size() && bg::within(ls[i], cyclePolygon)) ++i;
+	inputPoint(file, ls[i - 1]);
+	inputPoint(file, cycle.rx, cycle.ry);
+	if (cycle.isCW)
+		file << ",CW";
+	else
+		file << ",CCW";
+	file << std::endl;
+}
+
+void drawLine(ofstream &file, BoostLineString &ls, int &i) {
+	file << "line";
+	inputPoint(file, ls[i]);
+	inputPoint(file, ls[i + 1]);
+	file << std::endl;
+}
+
+void outputSilkscreen(ofstream &file, BoostLineString &ls, vector<BoostPolygon> &cyclePolygonList, vector<Cycle> cycleList) {
 	file << "silkscreen\n";
-	for (int i = 1; i < ls.size(); ++i) {
-		file << "line";
-		inputPoint(file, ls[i - 1]);
-		inputPoint(file, ls[i]);
-		file << std::endl;
+	int i = 0;
+	for (; i < ls.size() - 1; ++i) {
+		bool inCycle = false;
+		for (int cIdx = 0; cIdx < cyclePolygonList.size(); ++cIdx) {
+			if (bg::within(ls[i], cyclePolygonList[cIdx])) {
+			inCycle = true;
+			intputCycle(file, cyclePolygonList[cIdx], cycleList[cIdx], ls, i);
+			break;
+			}
+		}
+		if (!inCycle) drawLine(file, ls, i);
+	}
+}
+
+void checkoutPutResult(BoostPolygon &bgAssembly, BoostMultipolygon &multBGCropper, BoostMultipolygon &cropperMulLsBuffer) {
+	string str;
+	std::ifstream input("Result.txt");
+	vector<BoostLineString> v_ls;
+	BoostLineString ls;
+	Polygom outline;
+
+	//assembly
+	input >> str;
+	while (input >> str) {
+		if (str[0] == 's') {
+			makeLine(outline, ls);
+			v_ls.push_back(ls);
+			outline.shape = "";
+			continue;
+		}
+		outline.addLine(str);
+	}
+	makeLine(outline, ls);
+	v_ls.push_back(ls);
+
+	{
+		std::ofstream svg("checkResult.svg");
+		boost::geometry::svg_mapper<BoostPoint> mapper(svg, 400, 400);
+		
+		mapper.add(bgAssembly);
+		mapper.add(multBGCropper);
+		mapper.add(cropperMulLsBuffer);
+
+		for (int i = 0; i < v_ls.size(); ++i) {
+			mapper.add(v_ls[i]);
+			mapper.map(v_ls[i], "fill-opacity:0.5;fill:rgb(153,204,0);stroke:rgb(153,204,0);stroke-width:2");
+		}
+
+		mapper.map(bgAssembly, "fill-opacity:0.5;fill:rgb(51,153,255);stroke:rgb(0,77,153);stroke-width:2");
+		mapper.map(multBGCropper, "fill-opacity:0.5;fill:rgb(204,153,0);stroke:rgb(202,153,0);stroke-width:2");
+		mapper.map(cropperMulLsBuffer, "fill-opacity:0.5;fill:rgb(255, 255, 153);stroke:rgb(77, 77, 0);stroke-width:2");
+
 	}
 }
 
@@ -210,7 +311,6 @@ int main()
 	printf("silkscreenlen %lf\n", silkscreenlen);
 	input >> str;
 
-	double x, y;
 	//assembly
 	while (1) {
 		input >> str;
@@ -244,6 +344,10 @@ int main()
 	BoostMultipolygon cropperMulLsBuffer;
 	buildAssemblyLine(assembly, assemblygap, multiCropperLs, croppergap, cropperMulLsBuffer, bgDiff);
 
+	vector<BoostPolygon> cycleList;
+	makeCycleEachPoint(assembly.cyclePt, assemblygap, cycleList);
+	printf("CycleList size : %d\n", cycleList.size());
+
 	ofstream resultFile("Result.txt");
 	{
 		std::ofstream svg("output.svg");
@@ -252,9 +356,14 @@ int main()
 		mapper.add(multBGCropper);
 		mapper.add(cropperMulLsBuffer);
 
+		for (int i = 0; i < cycleList.size(); ++i) {
+			mapper.add(cycleList[i]);
+			mapper.map(cycleList[i], "fill-opacity:0.5;fill:rgb(255, 102, 255);stroke:rgb(102, 0, 102);stroke-width:2");
+		}
+
 		for (int i = 0; i < bgDiff.size(); ++i) {
 			if (bg::within(bgDiff[i], multBGCropper) == false && isLargerEnough(bgDiff[i], silkscreenlen)) {
-				drawLine(resultFile, bgDiff[i]);
+				outputSilkscreen(resultFile, bgDiff[i], cycleList, assembly.cyclePt);
 				mapper.add(bgDiff[i]);
 				mapper.map(bgDiff[i], "fill-opacity:0.5;fill:rgb(153,204,0);stroke:rgb(153,204,0);stroke-width:2");
 			}
@@ -265,4 +374,6 @@ int main()
 		mapper.map(cropperMulLsBuffer, "fill-opacity:0.5;fill:rgb(255, 255, 153);stroke:rgb(77, 77, 0);stroke-width:2");
 	}
 	resultFile.close();
+
+	checkoutPutResult(bgAssembly, multBGCropper, cropperMulLsBuffer);
 }
