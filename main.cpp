@@ -185,6 +185,20 @@ void multiCropperBuffer(BoostMultiLineString multiCropperLs, const double croppe
 	boost::geometry::buffer(multiCropperLs, cropperMulLsBuffer, cropper_dist_strategy, side_strategy, join_strategy, end_strategy, point_strategy);
 }
 
+void connectLine(vector<BoostLineString> &bgDiff) {
+	BoostLineString &stLine = *(bgDiff.begin());
+	BoostLineString &edLine = *(bgDiff.end() - 1);
+
+	double stPtX = bg::get<0>(stLine[0]), stPtY = bg::get<1>(stLine[0]);
+	double edPtX = bg::get<0>(*(edLine.end() - 1)), edPtY = bg::get<1>(*(edLine.end() - 1));
+	
+	if (stPtX == edPtX && stPtY == edPtY) {
+		for (int i = 0; i < stLine.size(); ++i)
+			edLine.push_back(stLine[i]);
+		bgDiff.erase(bgDiff.begin());
+	}
+}
+
 void buildAssemblyLine(Polygom &assembly, const double assemblygap, BoostMultiLineString multiCropperLs, const double croppergap, BoostMultipolygon &cropperMulLsBuffer, vector<BoostLineString> &bgDiff) {
 	BoostMultiLineString assemblyMultLine;
 	assemblyBuffer(assembly, assemblygap, assemblyMultLine);
@@ -192,6 +206,8 @@ void buildAssemblyLine(Polygom &assembly, const double assemblygap, BoostMultiLi
 
 	//difference
 	bg::difference(assemblyMultLine, cropperMulLsBuffer, bgDiff);
+	connectLine(bgDiff);
+
 }
 
 void makeCycleEachPoint(vector<Cycle> &cyclePt, const double assemblyGap, vector<BoostPolygon> &cycleList) {
@@ -212,7 +228,7 @@ void makeCycleEachPoint(vector<Cycle> &cyclePt, const double assemblyGap, vector
 }
 
 bool isLargerEnough(BoostLineString silkScreen, const double silkscreenlen) {
-	cout << "Len : " << bg::length(silkScreen) << endl;
+	//cout << "Len : " << bg::length(silkScreen) << endl;
 	return (bg::length(silkScreen)) > silkscreenlen;
 }
 
@@ -324,7 +340,7 @@ int main()
 	croppergap = atof(str.substr(10).c_str());
 	input >> str;
 	silkscreenlen = atof(str.substr(14).c_str());
-	printf("silkscreenlen %lf\n", silkscreenlen);
+	//printf("silkscreenlen %lf\n", silkscreenlen);
 	input >> str;
 
 	//assembly
@@ -362,7 +378,7 @@ int main()
 
 	vector<BoostPolygon> cycleList;
 	makeCycleEachPoint(assembly.cyclePt, assemblygap, cycleList);
-	printf("CycleList size : %d\n", cycleList.size());
+	//printf("CycleList size : %d\n", cycleList.size());
 
 	ofstream resultFile("Result.txt");
 	{
@@ -392,5 +408,4 @@ int main()
 	resultFile.close();
 
 	checkoutPutResult(bgAssembly, multBGCropper, cropperMulLsBuffer);
-	system("pause");
 }
