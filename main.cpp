@@ -188,7 +188,7 @@ void makeCycleEachPoint(vector<Cycle> &cyclePt, const double assemblyGap, vector
 		double x = c.rx + c.r;
 		double y = c.ry;
 
-		if (!c.isCW)x += addR;
+		if (c.isCW)x += addR;
 		c.drawArcycle(x, y, x, y, 360, true, shape);
 		makeThePolygonShape(shape, cycleShape);
 		cycleList.push_back(cycleShape);
