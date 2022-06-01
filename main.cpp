@@ -38,7 +38,7 @@ private:
 		return sqrt((x - rx) * (x - rx) + (y - ry) * (y - ry));
 	}
 public: //CW or CCW 
-	const double rDegSt = 15.0;
+	const double rDegSt = 5.0;
 	double x1, y1, x2, y2, rx, ry, r;
 	bool isCW;
 	Cycle(double _x1, double _y1, double _x2, double _y2, double _rx, double _ry, bool _isCW)
@@ -200,8 +200,8 @@ void assemblyBuffer(Polygom &assembly, const double assemblygap, BoostMultiLineS
 
 	//remove the first point in the Line
 	printf("tagX : %lf, tayY: %lf\n", tagX, tagY);
-	removeConnectPoint(assemblyLs, tagX, tagY);
-	removeConnectPoint(assemblyLs, tagX, tagY);
+	//removeConnectPoint(assemblyLs, tagX, tagY);
+	//removeConnectPoint(assemblyLs, tagX, tagY);
 	
 	assemblyMultLine.push_back(assemblyLs);
 }
@@ -273,6 +273,7 @@ void intputCycle(ofstream &file, BoostPolygon cyclePolygon, Cycle cycle, BoostLi
 	inputPoint(file, ls[i]);
 	while (i < ls.size() && bg::within(ls[i], cyclePolygon)) ++i;
 	inputPoint(file, ls[i - 1]);
+	--i; // walk back the point, that can make a line, not arc
 	inputPoint(file, cycle.rx, cycle.ry);
 	if (cycle.isCW)
 		file << ",CW";
@@ -306,7 +307,7 @@ void outputSilkscreen(ofstream &file, BoostLineString &ls, vector<BoostPolygon> 
 
 void checkoutPutResult(BoostPolygon &bgAssembly, BoostMultipolygon &multBGCropper, BoostMultipolygon &cropperMulLsBuffer) {
 	string str;
-	std::ifstream input("ResultPublicCase/Result_B.txt");
+	std::ifstream input("ResultPublicCase/Result_C.txt");
 	vector<BoostLineString> v_ls;
 	BoostLineString ls;
 	Polygom outline;
@@ -328,7 +329,7 @@ void checkoutPutResult(BoostPolygon &bgAssembly, BoostMultipolygon &multBGCroppe
 
 	BoostPoint pt(-1.0, 0.0);
 	{
-		std::ofstream svg("ResultPublicCase/checkResult_B.svg");
+		std::ofstream svg("ResultPublicCase/checkResult_C.svg");
 		boost::geometry::svg_mapper<BoostPoint> mapper(svg, 400, 400);
 
 		mapper.add(bgAssembly);
@@ -363,7 +364,7 @@ int main()
 	double assemblygap, croppergap, silkscreenlen;
 	int cropSize = 0;
 
-	std::ifstream input("PublicCase/PublicCase_B.txt");
+	std::ifstream input("PublicCase/PublicCase_C.txt");
 	input >> str;
 	assemblygap = atof(str.substr(12).c_str());
 	input >> str;
@@ -412,9 +413,9 @@ int main()
 
 
 	BoostPoint pt(-0.1, 0.0);
-	ofstream resultFile("ResultPublicCase/Result_B.txt");
+	ofstream resultFile("ResultPublicCase/Result_C.txt");
 	{
-		std::ofstream svg("ResultPublicCase/output_B.svg");
+		std::ofstream svg("ResultPublicCase/output_C.svg");
 		boost::geometry::svg_mapper<BoostPoint> mapper(svg, 400, 400);
 		
 		mapper.add(bgAssembly);
@@ -446,5 +447,5 @@ int main()
 	resultFile.close();
 
 	checkoutPutResult(bgAssembly, multBGCropper, cropperMulLsBuffer);
-	system("pause");
+	//system("pause");
 }
