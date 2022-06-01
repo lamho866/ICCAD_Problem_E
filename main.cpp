@@ -171,12 +171,12 @@ void pointInsertection(BoostPoint &aPt1, BoostPoint &aPt2, BoostPoint &bPt1, Boo
 	newPt.set<1>(Dy / D);
 }
 
-void removeConnectPoint(BoostLineString &ls, const double tagX,const double tagY) {
+void removeConnectPoint(BoostLineString &ls, const double tagX, const double tagY) {
 	for (int i = 0; i < ls.size(); ++i) {
 		printf("x: %lf, y: %lf\n", bg::get<0>(ls[i]), bg::get<1>(ls[i]));
 		if (almost_equal(bg::get<0>(ls[i]), tagX) && almost_equal(bg::get<1>(ls[i]), tagY)) {
 			//BoostPoint newPt;
-				ls.erase(ls.begin() + i);
+			ls.erase(ls.begin() + i);
 			return;
 		}
 	}
@@ -202,7 +202,7 @@ void assemblyBuffer(Polygom &assembly, const double assemblygap, BoostMultiLineS
 	printf("tagX : %lf, tayY: %lf\n", tagX, tagY);
 	//removeConnectPoint(assemblyLs, tagX, tagY);
 	//removeConnectPoint(assemblyLs, tagX, tagY);
-	
+
 	assemblyMultLine.push_back(assemblyLs);
 }
 
@@ -219,7 +219,7 @@ void connectLine(vector<BoostLineString> &bgDiff) {
 
 	double stPtX = bg::get<0>(stLine[0]), stPtY = bg::get<1>(stLine[0]);
 	double edPtX = bg::get<0>(*(edLine.end() - 1)), edPtY = bg::get<1>(*(edLine.end() - 1));
-	
+
 	if (stPtX == edPtX && stPtY == edPtY) {
 		for (int i = 0; i < stLine.size(); ++i)
 			edLine.push_back(stLine[i]);
@@ -281,11 +281,33 @@ void intputCycle(ofstream &file, BoostPolygon cyclePolygon, Cycle cycle, BoostLi
 		file << ",CCW";
 	file << std::endl;
 }
+void getPointData(BoostPoint pt, double &x, double &y) {
+	x = bg::get<0>(pt);
+	y = bg::get<1>(pt);
+}
+
+bool collinear(BoostPoint pt1, BoostPoint pt2, BoostPoint pt3)
+{
+	double x1, x2, x3, y1, y2, y3;
+	getPointData(pt1, x1, y1);
+	getPointData(pt2, x2, y2);
+	getPointData(pt3, x3, y3);
+	double a = x1 * (y2 - y3) +
+		x2 * (y3 - y1) +
+		x3 * (y1 - y2);
+
+	return a == 0.0;
+}
 
 void drawLine(ofstream &file, BoostLineString &ls, int &i) {
 	file << "line";
 	inputPoint(file, ls[i]);
-	inputPoint(file, ls[i + 1]);
+	int j = i + 2;
+	for (; j < ls.size(); ++j)
+		if (!collinear(ls[i], ls[i + 1], ls[j]))
+			break;
+	inputPoint(file, ls[j - 1]);
+	i = j - 2;
 	file << std::endl;
 }
 
@@ -301,7 +323,7 @@ void outputSilkscreen(ofstream &file, BoostLineString &ls, vector<BoostPolygon> 
 				break;
 			}
 		}
-		if (!inCycle) drawLine(file, ls, i);
+		if (!inCycle)drawLine(file, ls, i);
 	}
 }
 
@@ -417,18 +439,18 @@ int main()
 	{
 		std::ofstream svg("ResultPublicCase/output_C.svg");
 		boost::geometry::svg_mapper<BoostPoint> mapper(svg, 400, 400);
-		
+
 		mapper.add(bgAssembly);
 		mapper.add(multBGCropper);
 		mapper.add(cropperMulLsBuffer);
 		mapper.add(pt);
 
-		
+
 		for (int i = 0; i < cycleList.size(); ++i) {
 			mapper.add(cycleList[i]);
 			mapper.map(cycleList[i], "fill-opacity:0.5;fill:rgb(255, 102, 255);stroke:rgb(102, 0, 102);stroke-width:2");
 		}
-		
+
 
 		for (int i = 0; i < bgDiff.size(); ++i) {
 			if (bg::within(bgDiff[i], multBGCropper) == false && isLargerEnough(bgDiff[i], silkscreenlen)) {
