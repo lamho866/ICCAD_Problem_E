@@ -129,6 +129,11 @@ public:
 	Polygom() {}
 };
 
+void getPointData(BoostPoint pt, double &x, double &y) {
+	x = bg::get<0>(pt);
+	y = bg::get<1>(pt);
+}
+
 void makeThePolygonShape(Polygom &polyShape, BoostPolygon &bgPlogom) {
 	polyShape.shape[polyShape.shape.size() - 1] = ' ';
 	//printf("%s\n", polyShape.shape.c_str());
@@ -173,8 +178,10 @@ void pointInsertection(BoostPoint &aPt1, BoostPoint &aPt2, BoostPoint &bPt1, Boo
 
 void removeConnectPoint(BoostLineString &ls, const double tagX, const double tagY) {
 	for (int i = 0; i < ls.size(); ++i) {
-		printf("x: %lf, y: %lf\n", bg::get<0>(ls[i]), bg::get<1>(ls[i]));
-		if (almost_equal(bg::get<0>(ls[i]), tagX) && almost_equal(bg::get<1>(ls[i]), tagY)) {
+		double x, y;
+		getPointData(ls[i], x, y);
+		printf("x: %lf, y: %lf\n", x, y);
+		if (almost_equal(x, tagX) && almost_equal(y, tagY)) {
 			//BoostPoint newPt;
 			ls.erase(ls.begin() + i);
 			return;
@@ -185,8 +192,8 @@ void removeConnectPoint(BoostLineString &ls, const double tagX, const double tag
 void assemblyBuffer(Polygom &assembly, const double assemblygap, BoostMultiLineString &assemblyMultLine) {
 	BoostLineString assemblyLs;
 	makeLine(assembly, assemblyLs);
-	double tagX = bg::get<0>(assemblyLs[0]);
-	double tagY = bg::get<1>(assemblyLs[0]);
+	double tagX, tagY;
+	getPointData(assemblyLs[0], tagX, tagY);
 
 	//make the outline
 	BoostMultipolygon assemblyOutLs;
@@ -217,8 +224,9 @@ void connectLine(vector<BoostLineString> &bgDiff) {
 	BoostLineString &stLine = *(bgDiff.begin());
 	BoostLineString &edLine = *(bgDiff.end() - 1);
 
-	double stPtX = bg::get<0>(stLine[0]), stPtY = bg::get<1>(stLine[0]);
-	double edPtX = bg::get<0>(*(edLine.end() - 1)), edPtY = bg::get<1>(*(edLine.end() - 1));
+	double stPtX, stPtY, edPtX, edPtY;
+	getPointData(stLine[0], stPtX, stPtY);
+	getPointData(*(edLine.end() - 1), edPtX, edPtY);
 
 	if (stPtX == edPtX && stPtY == edPtY) {
 		for (int i = 0; i < stLine.size(); ++i)
@@ -281,10 +289,6 @@ void intputCycle(ofstream &file, BoostPolygon cyclePolygon, Cycle cycle, BoostLi
 		file << ",CCW";
 	file << std::endl;
 }
-void getPointData(BoostPoint pt, double &x, double &y) {
-	x = bg::get<0>(pt);
-	y = bg::get<1>(pt);
-}
 
 bool collinear(BoostPoint pt1, BoostPoint pt2, BoostPoint pt3)
 {
@@ -329,7 +333,7 @@ void outputSilkscreen(ofstream &file, BoostLineString &ls, vector<BoostPolygon> 
 
 void checkoutPutResult(BoostPolygon &bgAssembly, BoostMultipolygon &multBGCropper, BoostMultipolygon &cropperMulLsBuffer) {
 	string str;
-	std::ifstream input("ResultPublicCase/Result_C.txt");
+	std::ifstream input("ResultPublicCase/Result_A.txt");
 	vector<BoostLineString> v_ls;
 	BoostLineString ls;
 	Polygom outline;
@@ -351,7 +355,7 @@ void checkoutPutResult(BoostPolygon &bgAssembly, BoostMultipolygon &multBGCroppe
 
 	BoostPoint pt(-1.0, 0.0);
 	{
-		std::ofstream svg("ResultPublicCase/checkResult_C.svg");
+		std::ofstream svg("ResultPublicCase/checkResult_A.svg");
 		boost::geometry::svg_mapper<BoostPoint> mapper(svg, 400, 400);
 
 		mapper.add(bgAssembly);
@@ -386,7 +390,7 @@ int main()
 	double assemblygap, croppergap, silkscreenlen;
 	int cropSize = 0;
 
-	std::ifstream input("PublicCase/PublicCase_C.txt");
+	std::ifstream input("PublicCase/PublicCase_A.txt");
 	input >> str;
 	assemblygap = atof(str.substr(12).c_str());
 	input >> str;
@@ -435,9 +439,9 @@ int main()
 
 
 	BoostPoint pt(-0.1, 0.0);
-	ofstream resultFile("ResultPublicCase/Result_C.txt");
+	ofstream resultFile("ResultPublicCase/Result_A.txt");
 	{
-		std::ofstream svg("ResultPublicCase/output_C.svg");
+		std::ofstream svg("ResultPublicCase/output_A.svg");
 		boost::geometry::svg_mapper<BoostPoint> mapper(svg, 400, 400);
 
 		mapper.add(bgAssembly);
