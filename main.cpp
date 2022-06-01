@@ -38,7 +38,7 @@ private:
 		return sqrt((x - rx) * (x - rx) + (y - ry) * (y - ry));
 	}
 public: //CW or CCW 
-	const double rDegSt = 15.0;
+	const double rDegSt = 5.0;
 	double x1, y1, x2, y2, rx, ry, r;
 	bool isCW;
 	Cycle(double _x1, double _y1, double _x2, double _y2, double _rx, double _ry, bool _isCW)
@@ -147,10 +147,36 @@ void makeLine(Polygom &polyShape, BoostLineString &bgLineStr) {
 	bg::read_wkt("LINESTRING(" + polyShape.shape + ")", bgLineStr);
 }
 
+template<class T>
+typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type
+almost_equal(T x, T y)
+{
+	return abs(x - y) <= std::numeric_limits<double>::epsilon();
+}
+
+void pointInsertection(BoostPoint &aPt1, BoostPoint &aPt2, BoostPoint &bPt1, BoostPoint &bPt2, BoostPoint &newPt) {
+	double a1, b1, c1, a2, b2, c2;
+	double D, Dx, Dy;
+
+	a1 = bg::get<1>(aPt1) - bg::get<1>(aPt2), b1 = -bg::get<0>(aPt1) + bg::get<0>(aPt2);
+	a2 = bg::get<1>(bPt1) - bg::get<1>(bPt2), b2 = -bg::get<0>(bPt1) + bg::get<0>(bPt2);
+	c1 = a1 * bg::get<0>(aPt1) + b1 * bg::get<1>(aPt1);
+	c2 = a2 * bg::get<0>(bPt1) + b2 * bg::get<1>(bPt1);
+
+	D = a1 * b2 - a2 * b1;
+	Dx = c1 * b2 - c2 * b1;
+	Dy = a1 * c2 - a2 * c1;
+
+	newPt.set<0>(Dx / D);
+	newPt.set<1>(Dy / D);
+}
+
 void removeConnectPoint(BoostLineString &ls, const double tagX,const double tagY) {
 	for (int i = 0; i < ls.size(); ++i) {
-		if (bg::get<0>(ls[i]) == tagX && bg::get<1>(ls[i]) == tagY) {
-			ls.erase(ls.begin() + i);
+		printf("x: %lf, y: %lf\n", bg::get<0>(ls[i]), bg::get<1>(ls[i]));
+		if (almost_equal(bg::get<0>(ls[i]), tagX) && almost_equal(bg::get<1>(ls[i]), tagY)) {
+			//BoostPoint newPt;
+				ls.erase(ls.begin() + i);
 			return;
 		}
 	}
@@ -164,7 +190,7 @@ void assemblyBuffer(Polygom &assembly, const double assemblygap, BoostMultiLineS
 
 	//make the outline
 	BoostMultipolygon assemblyOutLs;
-	bg::strategy::buffer::distance_symmetric<double> assemblygap_dist_strategy(assemblygap / 10.0);
+	bg::strategy::buffer::distance_symmetric<double> assemblygap_dist_strategy(assemblygap);
 	boost::geometry::buffer(assemblyLs, assemblyOutLs, assemblygap_dist_strategy, side_strategy, join_strategy, end_strategy, point_strategy);
 
 	assert(assemblyOutLs.size() == 1);
@@ -173,7 +199,9 @@ void assemblyBuffer(Polygom &assembly, const double assemblygap, BoostMultiLineS
 	bg::read_wkt("LINESTRING(" + outLineStrLs + ")", assemblyLs);
 
 	//remove the first point in the Line
-	removeConnectPoint(assemblyLs, tagX, tagY);
+	printf("tagX : %lf, tayY: %lf\n", tagX, tagY);
+	//removeConnectPoint(assemblyLs, tagX, tagY);
+	//removeConnectPoint(assemblyLs, tagX, tagY);
 	
 	assemblyMultLine.push_back(assemblyLs);
 }
@@ -207,7 +235,6 @@ void buildAssemblyLine(Polygom &assembly, const double assemblygap, BoostMultiLi
 	//difference
 	bg::difference(assemblyMultLine, cropperMulLsBuffer, bgDiff);
 	connectLine(bgDiff);
-
 }
 
 void makeCycleEachPoint(vector<Cycle> &cyclePt, const double assemblyGap, vector<BoostPolygon> &cycleList) {
@@ -246,6 +273,7 @@ void intputCycle(ofstream &file, BoostPolygon cyclePolygon, Cycle cycle, BoostLi
 	inputPoint(file, ls[i]);
 	while (i < ls.size() && bg::within(ls[i], cyclePolygon)) ++i;
 	inputPoint(file, ls[i - 1]);
+	--i; // walk back the point, that can make a line, not arc
 	inputPoint(file, cycle.rx, cycle.ry);
 	if (cycle.isCW)
 		file << ",CW";
@@ -279,7 +307,7 @@ void outputSilkscreen(ofstream &file, BoostLineString &ls, vector<BoostPolygon> 
 
 void checkoutPutResult(BoostPolygon &bgAssembly, BoostMultipolygon &multBGCropper, BoostMultipolygon &cropperMulLsBuffer) {
 	string str;
-	std::ifstream input("Result.txt");
+	std::ifstream input("ResultPublicCase/Result_C.txt");
 	vector<BoostLineString> v_ls;
 	BoostLineString ls;
 	Polygom outline;
@@ -298,13 +326,16 @@ void checkoutPutResult(BoostPolygon &bgAssembly, BoostMultipolygon &multBGCroppe
 	makeLine(outline, ls);
 	v_ls.push_back(ls);
 
+
+	BoostPoint pt(-1.0, 0.0);
 	{
-		std::ofstream svg("checkResult.svg");
+		std::ofstream svg("ResultPublicCase/checkResult_C.svg");
 		boost::geometry::svg_mapper<BoostPoint> mapper(svg, 400, 400);
 
 		mapper.add(bgAssembly);
 		mapper.add(multBGCropper);
-		mapper.add(cropperMulLsBuffer);
+		//mapper.add(cropperMulLsBuffer);
+		mapper.add(pt);
 
 		for (int i = 0; i < v_ls.size(); ++i) {
 			mapper.add(v_ls[i]);
@@ -313,8 +344,8 @@ void checkoutPutResult(BoostPolygon &bgAssembly, BoostMultipolygon &multBGCroppe
 
 		mapper.map(bgAssembly, "fill-opacity:0.5;fill:rgb(51,153,255);stroke:rgb(0,77,153);stroke-width:2");
 		mapper.map(multBGCropper, "fill-opacity:0.5;fill:rgb(204,153,0);stroke:rgb(202,153,0);stroke-width:2");
-		mapper.map(cropperMulLsBuffer, "fill-opacity:0.5;fill:rgb(255, 255, 153);stroke:rgb(77, 77, 0);stroke-width:2");
-
+		//mapper.map(cropperMulLsBuffer, "fill-opacity:0.5;fill:rgb(255, 255, 153);stroke:rgb(77, 77, 0);stroke-width:2");
+		mapper.map(pt, "fill-opacity:0.5;fill:rgb(0,0,0);stroke:rgb(0,0,0);stroke-width:2");
 	}
 }
 
@@ -333,14 +364,14 @@ int main()
 	double assemblygap, croppergap, silkscreenlen;
 	int cropSize = 0;
 
-	std::ifstream input("Problem.txt");
+	std::ifstream input("PublicCase/PublicCase_C.txt");
 	input >> str;
 	assemblygap = atof(str.substr(12).c_str());
 	input >> str;
 	croppergap = atof(str.substr(10).c_str());
 	input >> str;
 	silkscreenlen = atof(str.substr(14).c_str());
-	//printf("silkscreenlen %lf\n", silkscreenlen);
+	printf("silkscreenlen %lf\n", silkscreenlen);
 	input >> str;
 
 	//assembly
@@ -378,20 +409,26 @@ int main()
 
 	vector<BoostPolygon> cycleList;
 	makeCycleEachPoint(assembly.cyclePt, assemblygap, cycleList);
-	//printf("CycleList size : %d\n", cycleList.size());
+	printf("CycleList size : %d\n", cycleList.size());
 
-	ofstream resultFile("Result.txt");
+
+	BoostPoint pt(-0.1, 0.0);
+	ofstream resultFile("ResultPublicCase/Result_C.txt");
 	{
-		std::ofstream svg("output.svg");
+		std::ofstream svg("ResultPublicCase/output_C.svg");
 		boost::geometry::svg_mapper<BoostPoint> mapper(svg, 400, 400);
+		
 		mapper.add(bgAssembly);
 		mapper.add(multBGCropper);
 		mapper.add(cropperMulLsBuffer);
+		mapper.add(pt);
 
+		
 		for (int i = 0; i < cycleList.size(); ++i) {
 			mapper.add(cycleList[i]);
 			mapper.map(cycleList[i], "fill-opacity:0.5;fill:rgb(255, 102, 255);stroke:rgb(102, 0, 102);stroke-width:2");
 		}
+		
 
 		for (int i = 0; i < bgDiff.size(); ++i) {
 			if (bg::within(bgDiff[i], multBGCropper) == false && isLargerEnough(bgDiff[i], silkscreenlen)) {
@@ -404,8 +441,11 @@ int main()
 		mapper.map(bgAssembly, "fill-opacity:0.5;fill:rgb(51,153,255);stroke:rgb(0,77,153);stroke-width:2");
 		mapper.map(multBGCropper, "fill-opacity:0.5;fill:rgb(204,153,0);stroke:rgb(202,153,0);stroke-width:2");
 		mapper.map(cropperMulLsBuffer, "fill-opacity:0.5;fill:rgb(255, 255, 153);stroke:rgb(77, 77, 0);stroke-width:2");
+		mapper.map(pt, "fill-opacity:0.5;fill:rgb(0,0,0);stroke:rgb(0,0,0);stroke-width:2");
+
 	}
 	resultFile.close();
 
 	checkoutPutResult(bgAssembly, multBGCropper, cropperMulLsBuffer);
+	//system("pause");
 }
