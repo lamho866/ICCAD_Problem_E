@@ -429,7 +429,11 @@ void outputSilkscreen(ofstream &file, BoostLineString &ls, vector<BoostPolygon> 
 
 void checkoutPutResult(BoostPolygon &bgAssembly, BoostMultipolygon &multBGCropper, BoostMultipolygon &cropperMulLsBuffer) {
 	string str;
+<<<<<<< HEAD
 	std::ifstream input("ResultPublicCase/Result_B.txt");
+=======
+	std::ifstream input("ResultPublicCase/Result_A.txt");
+>>>>>>> 0a22589e4291725f94c0f9e4290db42e9bcbf2d2
 	vector<BoostLineString> v_ls;
 	BoostLineString ls;
 	Polygom outline;
@@ -451,7 +455,11 @@ void checkoutPutResult(BoostPolygon &bgAssembly, BoostMultipolygon &multBGCroppe
 
 	BoostPoint pt(-1.0, 0.0);
 	{
+<<<<<<< HEAD
 		std::ofstream svg("ResultPublicCase/checkResult_B.svg");
+=======
+		std::ofstream svg("ResultPublicCase/checkResult_A.svg");
+>>>>>>> 0a22589e4291725f94c0f9e4290db42e9bcbf2d2
 		boost::geometry::svg_mapper<BoostPoint> mapper(svg, 400, 400);
 
 		mapper.add(bgAssembly);
@@ -486,7 +494,8 @@ int main()
 	double assemblygap, croppergap, silkscreenlen;
 	int cropSize = 0;
 
-	std::ifstream input("PublicCase/PublicCase_B.txt");
+	std::ifstream input("PublicCase/PublicCase_A.txt");
+
 	input >> str;
 	assemblygap = atof(str.substr(12).c_str());
 	input >> str;
@@ -535,6 +544,7 @@ int main()
 
 
 	BoostPoint pt(-0.1, 0.0);
+
 	ofstream resultFile("ResultPublicCase/Result_B.txt");
 	{
 		std::ofstream svg("ResultPublicCase/output_B.svg");
