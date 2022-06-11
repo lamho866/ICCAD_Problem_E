@@ -129,6 +129,11 @@ public:
 	Polygom() {}
 };
 
+void getPointData(BoostPoint pt, double &x, double &y) {
+	x = bg::get<0>(pt);
+	y = bg::get<1>(pt);
+}
+
 void makeThePolygonShape(Polygom &polyShape, BoostPolygon &bgPlogom) {
 	polyShape.shape[polyShape.shape.size() - 1] = ' ';
 	//printf("%s\n", polyShape.shape.c_str());
@@ -171,12 +176,79 @@ void pointInsertection(BoostPoint &aPt1, BoostPoint &aPt2, BoostPoint &bPt1, Boo
 	newPt.set<1>(Dy / D);
 }
 
+int countStartPoint(BoostLineString &ls, const double tagX, const double tagY) {
+	int cnt = 0;
+	for (int i = 0; i < ls.size(); ++i) {
+		double x, y;
+		getPointData(ls[i], x, y);
+		if (almost_equal(x, tagX) && almost_equal(y, tagY))
+			cnt++;
+	}
+	return cnt;
+}
+
 void removeConnectPoint(BoostLineString &ls, const double tagX, const double tagY) {
 	for (int i = 0; i < ls.size(); ++i) {
-		printf("x: %lf, y: %lf\n", bg::get<0>(ls[i]), bg::get<1>(ls[i]));
-		if (almost_equal(bg::get<0>(ls[i]), tagX) && almost_equal(bg::get<1>(ls[i]), tagY)) {
+		double x, y;
+		getPointData(ls[i], x, y);
+		printf("x: %lf, y: %lf\n", x, y);
+		if (almost_equal(x, tagX) && almost_equal(y, tagY)) {
 			//BoostPoint newPt;
 			ls.erase(ls.begin() + i);
+			return;
+		}
+	}
+}
+
+struct SegmentLine
+{
+	double x1, y1, x2, y2;
+	SegmentLine(double _x1, double _y1, double _x2, double _y2) : x1(_x1), x2(_x2), y1(_y1), y2(_y2) {}
+};
+
+void connectAB(SegmentLine &a, SegmentLine &b, double &res_x, double &res_y) {
+	double a1, b1, c1, a2, b2, c2;
+	double D, Dx, Dy;
+	a1 = a.y1 - a.y2, b1 = -a.x1 + a.x2;
+	a2 = b.y1 - b.y2, b2 = -b.x1 + b.x2;
+	c1 = a1 * a.x1 + b1 * a.y1;
+	c2 = a2 * b.x1 + b2 * b.y1;
+
+	D = a1 * b2 - a2 * b1;
+	Dx = c1 * b2 - c2 * b1;
+	Dy = a1 * c2 - a2 * c1;
+
+	res_x = Dx / D;
+	res_y = Dy / D;
+}
+
+void modifyStartPoint(BoostLineString &ls, const double tagX, const double tagY) {
+	int lsSize = ls.size();
+	for (int i = 0; i < lsSize; ++i) {
+		double x, y;
+		getPointData(ls[i], x, y);
+		if (almost_equal(x, tagX) && almost_equal(y, tagY)) {
+			double x1, x2, x3, x4, y1, y2, y3, y4, resX, resY;
+			getPointData(ls[(i - 2 + lsSize) % lsSize], x1, y1);
+			getPointData(ls[(i - 1 + lsSize) % lsSize], x2, y2);
+			getPointData(ls[(i + 1) % lsSize], x3, y3);
+			getPointData(ls[(i + 2) % lsSize], x4, y4);
+
+			printf("%lf, %lf\n", x1, y1);
+			printf("%lf, %lf\n", x2, y2);
+			printf("%lf, %lf\n", x3, y3);
+			printf("%lf, %lf\n", x4, y4);
+
+			SegmentLine lineA(x1, y1, x2, y2);
+			SegmentLine lineB(x3, y3, x4, y4);
+
+			connectAB(lineA, lineB, resX, resY);
+
+			printf("modifyPoint\n");
+			printf("%lf, %lf\n", resX, resY);
+
+			ls[i].set<0>(resX);
+			ls[i].set<1>(resY);
 			return;
 		}
 	}
@@ -185,8 +257,8 @@ void removeConnectPoint(BoostLineString &ls, const double tagX, const double tag
 void assemblyBuffer(Polygom &assembly, const double assemblygap, BoostMultiLineString &assemblyMultLine) {
 	BoostLineString assemblyLs;
 	makeLine(assembly, assemblyLs);
-	double tagX = bg::get<0>(assemblyLs[0]);
-	double tagY = bg::get<1>(assemblyLs[0]);
+	double tagX, tagY;
+	getPointData(assemblyLs[0], tagX, tagY);
 
 	//make the outline
 	BoostMultipolygon assemblyOutLs;
@@ -199,7 +271,38 @@ void assemblyBuffer(Polygom &assembly, const double assemblygap, BoostMultiLineS
 	bg::read_wkt("LINESTRING(" + outLineStrLs + ")", assemblyLs);
 
 	//remove the first point in the Line
-	printf("tagX : %lf, tayY: %lf\n", tagX, tagY);
+	printf("--------------------------------\n");
+	printf("startPoint:\n");
+	printf("x: %lf, y: %lf\n", tagX, tagY);
+	printf("assemblyPoint\n");
+	for (int i = 0; i < assemblyLs.size(); ++i) {
+		double x, y;
+		getPointData(assemblyLs[i], x, y);
+		printf("x: %lf, y: %lf\n", x, y);
+	}
+	printf("---------------------------------\n");
+	
+	//removeConnectPoint(assemblyLs, tagX, tagY);
+	int startPtCnt = countStartPoint(assemblyLs, tagX, tagY);
+	while (startPtCnt > 1)
+		removeConnectPoint(assemblyLs, tagX, tagY), startPtCnt--;
+
+	modifyStartPoint(assemblyLs, tagX, tagY);
+	
+	printf("\n\nAfter\n\n");
+	printf("--------------------------------\n");
+	printf("startPoint:\n");
+	printf("x: %lf, y: %lf\n", tagX, tagY);
+	printf("assemblyPoint\n");
+	for (int i = 0; i < assemblyLs.size(); ++i) {
+		double x, y;
+		getPointData(assemblyLs[i], x, y);
+		printf("x: %lf, y: %lf\n", x, y);
+	}
+	printf("---------------------------------\n");
+
+
+	//removeConnectStartPointLine(assemblyLs, tagX, tagY);
 	//removeConnectPoint(assemblyLs, tagX, tagY);
 	//removeConnectPoint(assemblyLs, tagX, tagY);
 
@@ -217,8 +320,9 @@ void connectLine(vector<BoostLineString> &bgDiff) {
 	BoostLineString &stLine = *(bgDiff.begin());
 	BoostLineString &edLine = *(bgDiff.end() - 1);
 
-	double stPtX = bg::get<0>(stLine[0]), stPtY = bg::get<1>(stLine[0]);
-	double edPtX = bg::get<0>(*(edLine.end() - 1)), edPtY = bg::get<1>(*(edLine.end() - 1));
+	double stPtX, stPtY, edPtX, edPtY;
+	getPointData(stLine[0], stPtX, stPtY);
+	getPointData(*(edLine.end() - 1), edPtX, edPtY);
 
 	if (stPtX == edPtX && stPtY == edPtY) {
 		for (int i = 0; i < stLine.size(); ++i)
@@ -281,10 +385,6 @@ void intputCycle(ofstream &file, BoostPolygon cyclePolygon, Cycle cycle, BoostLi
 		file << ",CCW";
 	file << std::endl;
 }
-void getPointData(BoostPoint pt, double &x, double &y) {
-	x = bg::get<0>(pt);
-	y = bg::get<1>(pt);
-}
 
 bool collinear(BoostPoint pt1, BoostPoint pt2, BoostPoint pt3)
 {
@@ -329,7 +429,7 @@ void outputSilkscreen(ofstream &file, BoostLineString &ls, vector<BoostPolygon> 
 
 void checkoutPutResult(BoostPolygon &bgAssembly, BoostMultipolygon &multBGCropper, BoostMultipolygon &cropperMulLsBuffer) {
 	string str;
-	std::ifstream input("ResultPublicCase/Result_C.txt");
+	std::ifstream input("ResultPublicCase/Result_B.txt");
 	vector<BoostLineString> v_ls;
 	BoostLineString ls;
 	Polygom outline;
@@ -351,7 +451,7 @@ void checkoutPutResult(BoostPolygon &bgAssembly, BoostMultipolygon &multBGCroppe
 
 	BoostPoint pt(-1.0, 0.0);
 	{
-		std::ofstream svg("ResultPublicCase/checkResult_C.svg");
+		std::ofstream svg("ResultPublicCase/checkResult_B.svg");
 		boost::geometry::svg_mapper<BoostPoint> mapper(svg, 400, 400);
 
 		mapper.add(bgAssembly);
@@ -386,7 +486,7 @@ int main()
 	double assemblygap, croppergap, silkscreenlen;
 	int cropSize = 0;
 
-	std::ifstream input("PublicCase/PublicCase_C.txt");
+	std::ifstream input("PublicCase/PublicCase_B.txt");
 	input >> str;
 	assemblygap = atof(str.substr(12).c_str());
 	input >> str;
@@ -435,9 +535,9 @@ int main()
 
 
 	BoostPoint pt(-0.1, 0.0);
-	ofstream resultFile("ResultPublicCase/Result_C.txt");
+	ofstream resultFile("ResultPublicCase/Result_B.txt");
 	{
-		std::ofstream svg("ResultPublicCase/output_C.svg");
+		std::ofstream svg("ResultPublicCase/output_B.svg");
 		boost::geometry::svg_mapper<BoostPoint> mapper(svg, 400, 400);
 
 		mapper.add(bgAssembly);
@@ -469,5 +569,5 @@ int main()
 	resultFile.close();
 
 	checkoutPutResult(bgAssembly, multBGCropper, cropperMulLsBuffer);
-	//system("pause");
+	system("pause");
 }
