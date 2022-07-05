@@ -1,7 +1,7 @@
 #include "SilkscreenOutput.h"
 
 void makeCycleEachPoint(vector<Cycle> &cyclePt, const double assemblyGap, vector<BoostPolygon> &cycleList) {
-	double addR = assemblyGap * 0.15;
+	double addR = assemblyGap * 1.5;
 	for (int i = 0; i < cyclePt.size(); ++i) {
 		string shape = "";
 		BoostPolygon cycleShape;

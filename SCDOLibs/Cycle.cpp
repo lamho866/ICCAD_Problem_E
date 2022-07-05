@@ -9,28 +9,26 @@ double Cycle::dist(double x, double y) {
 	return sqrt((x - rx) * (x - rx) + (y - ry) * (y - ry));
 }
 
+double Cycle::coorDeg(double x, double y) {
+	x -= rx, y -= ry;
+	double curDeg = asin(y / r) * 180.0 / PI;
+	//sin have 1 and -1
+	if (y < 0.0) curDeg = 90.0 - curDeg;
+	else curDeg = 90 - curDeg;
+	
+	if (x < 0.0) return 360.0 - curDeg;
+	return curDeg;
+}
+
 double Cycle::deg(bool isCW) {
-	if (x1 == x2 && y1 == y2)
-		return 0.0;
+	double stDeg = coorDeg(x1, y1);
+	double edDeg = coorDeg(x2, y2);
 
-	if (x1 == x2 || y1 == y2)
-		return 180.0;
-
-	double va_x = x1 - rx, va_y = y1 - ry;
-	double vb_x = x2 - rx, vb_y = y2 - ry;
-	double params = va_x * vb_y - va_y * vb_x;
-
-	params /= dist(x1, y1);
-	params /= dist(x2, y2);
-
-	double degParams = asin(params) * 180 / PI;
-	if (isCW) {
-		if (degParams < 0) return -degParams;
-		return 180 + degParams;
-	}
-	//CWW
-	if (degParams < 0) return  degParams + 360;
-	return degParams;
+	double curDeg = edDeg - stDeg;
+	if (curDeg < 0.0) curDeg += 360.0;
+	
+	if (isCW) return curDeg;
+	return 360.0 - curDeg;
 }
 
 void Cycle::rotationPt(double curX, double curY, double &nxtX, double &nxtY, bool isCW) {
