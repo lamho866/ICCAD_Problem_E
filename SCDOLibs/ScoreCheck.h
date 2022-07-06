@@ -38,6 +38,8 @@ private:
 
 	double scoreCal(double score, double percent);
 	double avgCropperDistance(vector<BoostLineString> &resultLs, BoostMultipolygon &multBGCropper);
+	double score_assemblyAreaBuffer();
+	
 	void scoreCase1();
 	void scoreCase2(BoostLineString &assemblyLs);
 	void scoreCase3();
