@@ -1,6 +1,7 @@
 #pragma once
 #include "Cycle.h"
 #include "Common.h"
+#include "SilkSet.h"
 #include <vector>
 #include <fstream>
 #include <boost/geometry/geometry.hpp>
@@ -15,20 +16,25 @@ typedef bg::model::multi_polygon<BoostPolygon> BoostMultipolygon;
 typedef bg::model::multi_linestring<BoostLineString> BoostMultiLineString;
 
 
-void makeCycleEachPoint(vector<Cycle> &cyclePt, const double assemblyGap, vector<BoostPolygon> &cycleList);
+class SilkScreenOutput {
+private:
+	void write(string &fileName);
+public:
+	double silkscreenlen, assemblygap;
+	vector<BoostPolygon> cycleList;
+	vector<SilkSet> skSt;
 
-bool isLargerEnough(BoostLineString silkScreen, const double silkscreenlen);
+	SilkScreenOutput(double _silkscreenlen, double _assemblygap, vector<Cycle> &cyclePt);
 
-void inputPoint(ofstream &file, BoostPoint &pt);
+	void makeCycleEachPoint(vector<Cycle> &cyclePt, const double assemblyGap, vector<BoostPolygon> &cycleList);
 
-void inputPoint(ofstream &file, const double x, const double y);
+	void intputCycle(BoostPolygon cyclePolygon, Cycle cycle, BoostLineString &ls, int &i);
 
-void intputCycle(ofstream &file, BoostPolygon cyclePolygon, Cycle cycle, BoostLineString &ls, int &i);
+	bool collinear(BoostPoint pt1, BoostPoint pt2, BoostPoint pt3);
 
-bool collinear(BoostPoint pt1, BoostPoint pt2, BoostPoint pt3);
+	void drawLine(BoostLineString &ls, int &i);
 
-void drawLine(ofstream &file, BoostLineString &ls, int &i);
+	void outputSilkscreen(BoostLineString &ls, vector<Cycle> assemblyCycleList);
 
-void outputSilkscreen(ofstream &file, BoostLineString &ls, vector<BoostPolygon> &cyclePolygonList, vector<Cycle> cycleList);
-
-void ResultOutput(string fileName, Polygom &assembly, BoostMultipolygon &multBGCropper, vector<BoostLineString> &bgDiff, vector<BoostPolygon> &cycleList, double silkscreenlen);
+	void ResultOutput(string fileName, Polygom &assembly, BoostMultipolygon &multBGCropper, vector<BoostLineString> &bgDiff);
+};

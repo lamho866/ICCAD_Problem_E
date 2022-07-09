@@ -82,14 +82,12 @@ int main()
 	BoostMultipolygon cropperMulLsBuffer;
 	buildAssemblyLine(assembly, assemblygap, multiCropperLs, croppergap, cropperMulLsBuffer, bgDiff);
 
-	vector<BoostPolygon> cycleList;
-	makeCycleEachPoint(assembly.cyclePt, assemblygap, cycleList);
-
-	ResultOutput(rFile + ".txt", assembly, multBGCropper, bgDiff, cycleList, silkscreenlen);
+	SilkScreenOutput silkScreenOutput(silkscreenlen, assemblygap, assembly.cyclePt);
+	silkScreenOutput.ResultOutput(rFile, assembly, multBGCropper, bgDiff);
 
 	//GraphDraw
 	checkoutPutResult(rFile, assembly, bgAssembly, multBGCropper, cropperMulLsBuffer);
-	resultSample(rFile, assembly, bgAssembly, multBGCropper, cropperMulLsBuffer, cycleList, bgDiff, silkscreenlen);
+	resultSample(rFile, assembly, bgAssembly, multBGCropper, cropperMulLsBuffer, silkScreenOutput.cycleList, bgDiff, silkscreenlen);
 
 	//ScoreCheck
 	ScoreCheck scoreCheck(pFile, rFile);
