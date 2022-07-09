@@ -1,6 +1,19 @@
 #include "SilkscreenOutput.h"
 
-void makeCycleEachPoint(vector<Cycle> &cyclePt, const double assemblyGap, vector<BoostPolygon> &cycleList) {
+SilkScreenOutput::SilkScreenOutput(double _silkscreenlen, double _assemblygap, vector<Cycle> &cyclePt) : silkscreenlen(_silkscreenlen), assemblygap(_assemblygap){
+	makeCycleEachPoint(cyclePt, assemblygap, cycleList);
+}
+
+void SilkScreenOutput::write(string &fileName) {
+	ofstream resultFile(fileName + ".txt");
+	for (int i = 0; i < skSt.size(); ++i) {
+		resultFile << "silkscreen\n";
+		skSt[i].write(resultFile);
+	}
+	resultFile.close();
+}
+
+void SilkScreenOutput::makeCycleEachPoint(vector<Cycle> &cyclePt, const double assemblyGap, vector<BoostPolygon> &cycleList) {
 	double addR = assemblyGap * 1.5;
 	for (int i = 0; i < cyclePt.size(); ++i) {
 		string shape = "";
@@ -16,35 +29,16 @@ void makeCycleEachPoint(vector<Cycle> &cyclePt, const double assemblyGap, vector
 	}
 }
 
-bool isLargerEnough(BoostLineString silkScreen, const double silkscreenlen) {
-	//cout << "Len : " << bg::length(silkScreen) << endl;
-	return (bg::length(silkScreen)) > silkscreenlen;
-}
-
-void inputPoint(ofstream &file, BoostPoint &pt) {
-	file << ',' << fixed << setprecision(4) << bg::get<0>(pt) << ',' << fixed << setprecision(4) << bg::get<1>(pt);
-}
-
-void inputPoint(ofstream &file, const double x, const double y) {
-	file << ',' << fixed << setprecision(4) << x << ',' << fixed << setprecision(4) << y;
-}
-
-
-void intputCycle(ofstream &file, BoostPolygon cyclePolygon, Cycle cycle, BoostLineString &ls, int &i) {
-	file << "arc";
-	inputPoint(file, ls[i]);
+void SilkScreenOutput::intputCycle(BoostPolygon cyclePolygon, Cycle cycle, BoostLineString &ls, int &i) {
+	double x1, x2, y1, y2;
+	getPointData(ls[i], x1, y1);
 	while (i < ls.size() && bg::within(ls[i], cyclePolygon)) ++i;
-	inputPoint(file, ls[i - 1]);
+	getPointData(ls[i - 1], x2, y2);
 	--i; // walk back the point, that can make a line, not arc
-	inputPoint(file, cycle.rx, cycle.ry);
-	if (cycle.isCW)
-		file << ",CW";
-	else
-		file << ",CCW";
-	file << std::endl;
+	skSt[skSt.size() - 1].addCircle(x1, y1, x2, y2, cycle.rx, cycle.ry, cycle.isCW);
 }
 
-bool collinear(BoostPoint pt1, BoostPoint pt2, BoostPoint pt3)
+bool SilkScreenOutput::collinear(BoostPoint pt1, BoostPoint pt2, BoostPoint pt3)
 {
 	double x1, x2, x3, y1, y2, y3;
 	getPointData(pt1, x1, y1);
@@ -57,40 +51,44 @@ bool collinear(BoostPoint pt1, BoostPoint pt2, BoostPoint pt3)
 	return a == 0.0;
 }
 
-void drawLine(ofstream &file, BoostLineString &ls, int &i) {
-	file << "line";
-	inputPoint(file, ls[i]);
+void SilkScreenOutput::drawLine(BoostLineString &ls, int &i){
+	double x1, x2, y1, y2;
+	getPointData(ls[i], x1, y1);
 	int j = i + 2;
 	for (; j < ls.size(); ++j)
 		if (!collinear(ls[i], ls[i + 1], ls[j]))
 			break;
-	inputPoint(file, ls[j - 1]);
+	getPointData(ls[j - 1], x2, y2);
 	i = j - 2;
-	file << std::endl;
+	skSt[skSt.size() - 1].addLine(x1, y1, x2, y2);
 }
 
-void outputSilkscreen(ofstream &file, BoostLineString &ls, vector<BoostPolygon> &cyclePolygonList, vector<Cycle> cycleList) {
-	file << "silkscreen\n";
+void SilkScreenOutput::outputSilkscreen(BoostLineString &ls, vector<Cycle> assemblyCycleList) {
+	int state = 0;
+	skSt.push_back(SilkSet());
 	int i = 0;
 	for (; i < ls.size() - 1; ++i) {
 		bool inCycle = false;
-		for (int cIdx = 0; cIdx < cyclePolygonList.size(); ++cIdx) {
-			if (bg::within(ls[i], cyclePolygonList[cIdx])) {
+		for (int cIdx = 0; cIdx < cycleList.size(); ++cIdx) {
+			if (bg::within(ls[i], cycleList[cIdx])) {
 				inCycle = true;
-				intputCycle(file, cyclePolygonList[cIdx], cycleList[cIdx], ls, i);
+				intputCycle(cycleList[cIdx], assemblyCycleList[cIdx], ls, i);
+				state = 2;
 				break;
 			}
 		}
-		if (!inCycle)drawLine(file, ls, i);
+		if (!inCycle) {
+			drawLine(ls, i);
+			state = 1;
+		}
 	}
 }
 
-void ResultOutput(string fileName, Polygom &assembly, BoostMultipolygon &multBGCropper, vector<BoostLineString> &bgDiff, vector<BoostPolygon> &cycleList, double silkscreenlen) {
-	ofstream resultFile(fileName);
+void SilkScreenOutput::ResultOutput(string fileName, Polygom &assembly, BoostMultipolygon &multBGCropper, vector<BoostLineString> &bgDiff) {
 	for (int i = 0; i < bgDiff.size(); ++i) {
 		if (bg::within(bgDiff[i], multBGCropper) == false && isLargerEnough(bgDiff[i], silkscreenlen)) {
-			outputSilkscreen(resultFile, bgDiff[i], cycleList, assembly.cyclePt);
+			outputSilkscreen(bgDiff[i], assembly.cyclePt);
 		}
 	}
-	resultFile.close();
+	write(fileName);
 }

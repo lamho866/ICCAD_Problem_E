@@ -20,3 +20,7 @@ void makeLine(Polygom &polyShape, BoostLineString &bgLineStr) {
 	bg::read_wkt("LINESTRING(" + polyShape.shape + ")", bgLineStr);
 }
 
+bool isLargerEnough(BoostLineString silkScreen, const double silkscreenlen) {
+	//cout << "Len : " << bg::length(silkScreen) << endl;
+	return (bg::length(silkScreen)) > silkscreenlen;
+}

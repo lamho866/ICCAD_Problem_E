@@ -20,14 +20,18 @@ void Silk::write(ofstream &file){
     if(isLine){
         file << "line";
         inputPoint(file, x1, y1);
-        inputPoint(file, x1, y1);
+        inputPoint(file, x2, y2);
         file << endl;
         return;
     }
 
-    file << "line";
+    file << "arc";
     inputPoint(file, x1, y1);
-    inputPoint(file, x1, y1);
+	inputPoint(file, x2, y2);
     inputPoint(file, rx, ry);
+	if (isCW)
+		file << ",CW";
+	else
+		file << ",CCW";
     file << endl;
 }

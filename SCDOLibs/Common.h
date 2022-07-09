@@ -18,4 +18,4 @@ void makeThePolygonShape(string &shape, BoostPolygon &bgPlogom);
 
 void makeLine(Polygom &polyShape, BoostLineString &bgLineStr);
 
-
+bool isLargerEnough(BoostLineString silkScreen, const double silkscreenlen);
