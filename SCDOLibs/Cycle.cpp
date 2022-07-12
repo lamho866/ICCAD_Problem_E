@@ -14,19 +14,27 @@ double Cycle::dist(double x, double y) {
 
 double Cycle::coordDeg(double x, double y) {
 	x -= rx, y -= ry;
-	double curDeg = asin(y / r) * 180.0 / PI;
-	//sin have 1 and -1
-	if (y < 0.0) curDeg = 90.0 - curDeg;
-	else curDeg = 90 - curDeg;
 
-	if (x < 0.0) return 360.0 - curDeg;
+	double curDeg = 0.0;
+	//if can more or equal 1 deg
+	//value range[-1, 1]
+	double params = y / r;
+	if (params > 1.0) params = 1.0;
+	if (params < -1.0) params = -1.0;
+
+	curDeg = asin(params) * 180.0 / PI;
+	//sin have 1 and -1
+	//if -1 => will add the deg
+	curDeg = 90.0 - curDeg;
+	if ((curDeg + 0.0) == 0.0) curDeg = 0.0;
+
+	if (x < 0.0) curDeg = 360.0 - curDeg;
+	if (curDeg >= 360.0) curDeg -= 360.0; //360.0 == 0;
+	//if (almost_equal(curDeg, 0.0)) curDeg = 0.0;//avoid negZero, -0.0
 	return curDeg;
 }
 
 double Cycle::deg(bool isCW) {
-	stDeg = coordDeg(x1, y1);
-	edDeg = coordDeg(x2, y2);
-
 	double curDeg = edDeg - stDeg;
 	if (curDeg < 0.0) curDeg += 360.0;
 
@@ -34,12 +42,21 @@ double Cycle::deg(bool isCW) {
 	return 360.0 - curDeg;
 }
 
+bool Cycle::almost_equal(double x, double y)
+{
+	return abs(x - y) <= std::numeric_limits<double>::epsilon();
+}
+
+bool Cycle::inRange(double deg, double st, double ed) {
+	return (almost_equal(st, deg) || st < deg) && (ed < deg || almost_equal(ed, deg));
+}
+
 bool Cycle::degInRange(double x, double y) {
 	double curDeg = coordDeg(x, y);
 	if (stDeg <= edDeg)
-		return isCW == (stDeg <= curDeg && curDeg <= edDeg);
+		return isCW == inRange(curDeg, stDeg, edDeg);
 
-	return isCW == (edDeg <= curDeg && curDeg <= edDeg);
+	return !isCW == inRange(curDeg, edDeg, stDeg);
 }
 
 void Cycle::rotationPt(double curX, double curY, double &nxtX, double &nxtY, bool isCW) {

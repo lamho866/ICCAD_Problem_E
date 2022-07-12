@@ -37,7 +37,12 @@ void SilkSet::addCircle(double x1, double y1, double x2, double y2, double rx, d
 
 void SilkSet::insertCircle(int i, double x1, double y1, double x2, double y2, double rx, double ry, bool isCW, int cyclePtIdx) {
 	arc++;
-	vector<Silk>::iterator it = sk.begin();
 	sk.insert(sk.begin() + i, Silk(false, x1, y1, x2, y2, rx, ry, isCW, cyclePtIdx));
+	len += sk[i].len;
+}
+
+void SilkSet::insertLine(int i, double x1, double y1, double x2, double y2) {
+	line++;
+	sk.insert(sk.begin() + i, Silk(true, x1, y1, x2, y2));
 	len += sk[i].len;
 }

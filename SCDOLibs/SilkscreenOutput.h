@@ -2,6 +2,7 @@
 #include "Cycle.h"
 #include "Common.h"
 #include "SilkSet.h"
+#include "cmath"
 #include <vector>
 #include <fstream>
 #include <boost/geometry/geometry.hpp>
@@ -43,3 +44,4 @@ public:
 
 	void ResultOutput(string fileName, Polygom &assembly, BoostMultipolygon &multBGCropper, vector<BoostLineString> &bgDiff);
 };
+

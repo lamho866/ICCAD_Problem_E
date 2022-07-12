@@ -11,6 +11,8 @@ class Cycle
 {
 private:
 	double dist(double x, double y);
+	bool almost_equal(double x, double y);
+	bool inRange(double deg, double st, double ed);
 public: //CW or CCW 
 	const double rDegSt = 5.0;
 	double x1, y1, x2, y2, rx, ry, r;
