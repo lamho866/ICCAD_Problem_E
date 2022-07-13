@@ -116,6 +116,7 @@ void multiCropperBuffer(BoostMultiLineString multiCropperLs, const double croppe
 }
 
 void connectLine(vector<BoostLineString> &bgDiff) {
+	if (bgDiff.size() == 1) return;
 	BoostLineString &stLine = *(bgDiff.begin());
 	BoostLineString &edLine = *(bgDiff.end() - 1);
 

@@ -52,7 +52,7 @@ bool SilkScreenOutput::collinear(BoostPoint pt1, BoostPoint pt2, BoostPoint pt3)
 		x2 * (y3 - y1) +
 		x3 * (y1 - y2);
 
-	return a == 0.0;
+	return abs(a) <= std::numeric_limits<double>::epsilon();
 }
 
 void SilkScreenOutput::drawLine(BoostLineString &ls, int &i){
