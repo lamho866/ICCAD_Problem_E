@@ -11,14 +11,18 @@ class Cycle
 {
 private:
 	double dist(double x, double y);
-	bool almost_equal(double x, double y);
 	bool inRange(double deg, double st, double ed);
 public: //CW or CCW 
 	const double rDegSt = 5.0;
 	double x1, y1, x2, y2, rx, ry, r;
 	double stDeg, edDeg;
 	bool isCW;
+	
 	Cycle(double _x1, double _y1, double _x2, double _y2, double _rx, double _ry, bool _isCW);
+	Cycle(const Cycle &c);
+	Cycle& operator=(const Cycle& c);
+
+	bool almost_equal(double x, double y);
 
 	double coordDeg(double x, double y);
 

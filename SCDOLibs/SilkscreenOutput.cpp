@@ -88,14 +88,10 @@ void SilkScreenOutput::addTurningPoint(int &i, SilkSet &skSet, bool isHeaed) {
 	Silk &sk = skSet.sk[i];
 	Cycle c = cyclePt[sk.cyclePtIdx];
 	double r = c.r - assemblygap;
-	
-	printf("stDeg: %lf, edDeg: %lf\n", c.stDeg, c.edDeg);
-	printf("rx: %lf, ry: %lf\n", c.rx, c.ry);
-	printf("x1: %lf, y1: %lf, x2: %lf, y2: %lf\n", c.x1, c.y1, c.x2, c.y2);
 
 	if (isHeaed) {
 		double x1, y1;
-		rtPt(0.0, r, c.stDeg, x1, y1);
+		rtPt(0.0, r, -c.stDeg, x1, y1);
 		x1 += c.rx, y1 += c.ry;
 		sk.x1 = x1, sk.y1 = y1;
 
@@ -105,7 +101,7 @@ void SilkScreenOutput::addTurningPoint(int &i, SilkSet &skSet, bool isHeaed) {
 	}
 
 	double x2, y2;
-	rtPt(0.0, r, c.edDeg, x2, y2);
+	rtPt(0.0, r, -c.edDeg, x2, y2);
 	x2 += c.rx, y2 += c.ry;
 	sk.x2 = x2, sk.y2 = y2;
 
@@ -125,7 +121,6 @@ void SilkScreenOutput::addArcSafetyLine(int &i, SilkSet &skSet) {
 		//move out arc & addTurningPoint
 		i += 3;
 	}
-	printf("\n");
 }
 
 void SilkScreenOutput::arcLineCheck(SilkSet &skSet) {

@@ -1,6 +1,6 @@
 #include "GraphDraw.h"
 
-void checkoutPutResult(string fName, Polygom &assembly, BoostPolygon &bgAssembly, BoostMultipolygon &multBGCropper, BoostMultipolygon &cropperMulLsBuffer) {
+void checkoutPutResult(string fName, Polygom &assembly, BoostPolygon &bgAssembly, BoostMultipolygon &multBGCropper, BoostMultipolygon &cropperMulLsBuffer, vector<BoostPolygon> &cycleList) {
 	string str;
 	std::ifstream input(fName + ".txt");
 	vector<BoostLineString> v_ls;
@@ -30,18 +30,23 @@ void checkoutPutResult(string fName, Polygom &assembly, BoostPolygon &bgAssembly
 
 		mapper.add(bgAssembly);
 		mapper.add(multBGCropper);
-		//mapper.add(cropperMulLsBuffer);
+		mapper.add(cropperMulLsBuffer);
 		mapper.add(pt);
+
+		for (int i = 0; i < cycleList.size(); ++i) {
+			mapper.add(cycleList[i]);
+			mapper.map(cycleList[i], "fill-opacity:0.5;fill:rgb(255, 102, 255);stroke:rgb(102, 0, 102);stroke-width:1");
+		}
 
 		for (int i = 0; i < v_ls.size(); ++i) {
 			mapper.add(v_ls[i]);
-			mapper.map(v_ls[i], "fill-opacity:0.5;fill:rgb(153,204,0);stroke:rgb(153,204,0);stroke-width:2");
+			mapper.map(v_ls[i], "fill-opacity:0.5;fill:rgb(153,204,0);stroke:rgb(153,204,0);stroke-width:1");
 		}
 
-		mapper.map(bgAssembly, "fill-opacity:0.5;fill:rgb(51,153,255);stroke:rgb(0,77,153);stroke-width:2");
-		mapper.map(multBGCropper, "fill-opacity:0.5;fill:rgb(204,153,0);stroke:rgb(202,153,0);stroke-width:2");
-		//mapper.map(cropperMulLsBuffer, "fill-opacity:0.5;fill:rgb(255, 255, 153);stroke:rgb(77, 77, 0);stroke-width:2");
-		mapper.map(pt, "fill-opacity:0.5;fill:rgb(0,0,0);stroke:rgb(0,0,0);stroke-width:2");
+		mapper.map(bgAssembly, "fill-opacity:0.5;fill:rgb(51,153,255);stroke:rgb(0,77,153);stroke-width:1");
+		mapper.map(multBGCropper, "fill-opacity:0.5;fill:rgb(204,153,0);stroke:rgb(202,153,0);stroke-width:1");
+		mapper.map(cropperMulLsBuffer, "fill-opacity:0.5;fill:rgb(255, 255, 153);stroke:rgb(77, 77, 0);stroke-width:1");
+		mapper.map(pt, "fill-opacity:0.5;fill:rgb(0,0,0);stroke:rgb(0,0,0);stroke-width:1");
 	}
 }
 
@@ -60,21 +65,21 @@ void resultSample(string fName, Polygom assembly, BoostPolygon &bgAssembly, Boos
 
 		for (int i = 0; i < cycleList.size(); ++i) {
 			mapper.add(cycleList[i]);
-			mapper.map(cycleList[i], "fill-opacity:0.5;fill:rgb(255, 102, 255);stroke:rgb(102, 0, 102);stroke-width:2");
+			mapper.map(cycleList[i], "fill-opacity:0.5;fill:rgb(255, 102, 255);stroke:rgb(102, 0, 102);stroke-width:1");
 		}
 
 
 		for (int i = 0; i < bgDiff.size(); ++i) {
 			if (bg::within(bgDiff[i], multBGCropper) == false && isLargerEnough(bgDiff[i], silkscreenlen)) {
 				mapper.add(bgDiff[i]);
-				mapper.map(bgDiff[i], "fill-opacity:0.5;fill:rgb(153,204,0);stroke:rgb(153,204,0);stroke-width:2");
+				mapper.map(bgDiff[i], "fill-opacity:0.5;fill:rgb(153,204,0);stroke:rgb(153,204,0);stroke-width:1");
 			}
 		}
 
-		mapper.map(bgAssembly, "fill-opacity:0.5;fill:rgb(51,153,255);stroke:rgb(0,77,153);stroke-width:2");
-		mapper.map(multBGCropper, "fill-opacity:0.5;fill:rgb(204,153,0);stroke:rgb(202,153,0);stroke-width:2");
-		mapper.map(cropperMulLsBuffer, "fill-opacity:0.5;fill:rgb(255, 255, 153);stroke:rgb(77, 77, 0);stroke-width:2");
-		mapper.map(pt, "fill-opacity:0.5;fill:rgb(0,0,0);stroke:rgb(0,0,0);stroke-width:2");
+		mapper.map(bgAssembly, "fill-opacity:0.5;fill:rgb(51,153,255);stroke:rgb(0,77,153);stroke-width:1");
+		mapper.map(multBGCropper, "fill-opacity:0.5;fill:rgb(204,153,0);stroke:rgb(202,153,0);stroke-width:1");
+		mapper.map(cropperMulLsBuffer, "fill-opacity:0.5;fill:rgb(255, 255, 153);stroke:rgb(77, 77, 0);stroke-width:1");
+		mapper.map(pt, "fill-opacity:0.5;fill:rgb(0,0,0);stroke:rgb(0,0,0);stroke-width:1");
 
 	}
 }

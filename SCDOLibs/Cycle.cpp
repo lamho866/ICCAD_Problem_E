@@ -3,9 +3,24 @@
 Cycle::Cycle(double _x1, double _y1, double _x2, double _y2, double _rx, double _ry, bool _isCW)
 	:x1(_x1), y1(_y1), x2(_x2), y2(_y2), rx(_rx), ry(_ry), isCW(_isCW) {
 	r = dist(x1, y1);
-
+	
 	stDeg = coordDeg(x1, y1);
 	edDeg = coordDeg(x2, y2);
+}
+
+Cycle::Cycle(const Cycle &c):
+x1(c.x1), y1(c.y1), x2(c.x2), y2(c.y2), rx(c.rx), ry(c.ry), isCW(c.isCW), r(c.r), stDeg(c.stDeg), edDeg(c.edDeg)
+{}
+
+Cycle& Cycle::operator=(const Cycle& c) {
+	x1 = c.x1, x2 = c.x2;
+	y1 = c.y1, y2 = c.y2;
+	rx = c.rx, ry = c.ry;
+	r = c.r;
+	stDeg = c.stDeg, edDeg = c.edDeg;
+	isCW = c.isCW;
+
+	return *this;
 }
 
 double Cycle::dist(double x, double y) {
