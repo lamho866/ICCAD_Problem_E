@@ -15,6 +15,6 @@ typedef bg::model::multi_polygon<BoostPolygon> BoostMultipolygon;
 typedef bg::model::multi_linestring<BoostLineString> BoostMultiLineString;
 
 
-void checkoutPutResult(string fName, Polygom &assembly, BoostPolygon &bgAssembly, BoostMultipolygon &multBGCropper, BoostMultipolygon &cropperMulLsBuffer);
+void checkoutPutResult(string fName, Polygom &assembly, BoostPolygon &bgAssembly, BoostMultipolygon &multBGCropper, BoostMultipolygon &cropperMulLsBuffer, vector<BoostPolygon> &cycleList);
 
 void resultSample(string fName, Polygom assembly, BoostPolygon &bgAssembly, BoostMultipolygon &multBGCropper, BoostMultipolygon &cropperMulLsBuffer, vector<BoostPolygon> &cycleList, vector<BoostLineString> &bgDiff, double silkscreenlen);

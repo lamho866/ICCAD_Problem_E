@@ -1,6 +1,6 @@
 #include "SilkscreenOutput.h"
 
-SilkScreenOutput::SilkScreenOutput(double _silkscreenlen, double _assemblygap, vector<Cycle> &cyclePt) : silkscreenlen(_silkscreenlen), assemblygap(_assemblygap){
+SilkScreenOutput::SilkScreenOutput(double _silkscreenlen, double _assemblygap, vector<Cycle> &cyclePoint) : silkscreenlen(_silkscreenlen), assemblygap(_assemblygap), cyclePt(cyclePoint){
 	makeCycleEachPoint(cyclePt, assemblygap, cycleList);
 }
 
@@ -29,13 +29,17 @@ void SilkScreenOutput::makeCycleEachPoint(vector<Cycle> &cyclePt, const double a
 	}
 }
 
-void SilkScreenOutput::intputCycle(BoostPolygon cyclePolygon, Cycle cycle, BoostLineString &ls, int &i) {
+void SilkScreenOutput::intputCycle(BoostPolygon cyclePolygon, Cycle cycle, BoostLineString &ls,int cIdx, int &i) {
 	double x1, x2, y1, y2;
 	getPointData(ls[i], x1, y1);
-	while (i < ls.size() && bg::within(ls[i], cyclePolygon)) ++i;
+	double x = x1, y = y1;
+	while (i < ls.size() && bg::within(ls[i], cyclePolygon)) {
+		getPointData(ls[i], x, y);
+		++i;
+	}
 	getPointData(ls[i - 1], x2, y2);
 	--i; // walk back the point, that can make a line, not arc
-	skSt[skSt.size() - 1].addCircle(x1, y1, x2, y2, cycle.rx, cycle.ry, cycle.isCW);
+	skSt[skSt.size() - 1].addCircle(x1, y1, x2, y2, cycle.rx, cycle.ry, cycle.isCW, cIdx);
 }
 
 bool SilkScreenOutput::collinear(BoostPoint pt1, BoostPoint pt2, BoostPoint pt3)
@@ -64,23 +68,72 @@ void SilkScreenOutput::drawLine(BoostLineString &ls, int &i){
 }
 
 void SilkScreenOutput::outputSilkscreen(BoostLineString &ls, vector<Cycle> assemblyCycleList) {
-	int state = 0;
 	skSt.push_back(SilkSet());
+	double x, y;
 	int i = 0;
 	for (; i < ls.size() - 1; ++i) {
-		bool inCycle = false;
+		getPointData(ls[i], x, y);
 		for (int cIdx = 0; cIdx < cycleList.size(); ++cIdx) {
-			if (bg::within(ls[i], cycleList[cIdx])) {
-				inCycle = true;
-				intputCycle(cycleList[cIdx], assemblyCycleList[cIdx], ls, i);
-				state = 2;
+			if (bg::within(ls[i], cycleList[cIdx]) && cyclePt[cIdx].degInRange(x, y)) {
+				intputCycle(cycleList[cIdx], assemblyCycleList[cIdx], ls, cIdx, i);
 				break;
 			}
 		}
-		if (!inCycle) {
+		if(i < ls.size() - 1)
 			drawLine(ls, i);
-			state = 1;
+	}
+}
+
+void SilkScreenOutput::addTurningPoint(int &i, SilkSet &skSet, bool isHeaed) {
+	Silk &sk = skSet.sk[i];
+	Cycle c = cyclePt[sk.cyclePtIdx];
+	double r = c.r - assemblygap;
+
+	if (isHeaed) {
+		double x1, y1;
+		rtPt(0.0, r, -c.stDeg, x1, y1);
+		x1 += c.rx, y1 += c.ry;
+		sk.x1 = x1, sk.y1 = y1;
+
+		skSet.insertLine(i, skSet.sk[i - 1].x2, y1, x1, y1);
+		skSet.insertLine(i, skSet.sk[i - 1].x2, skSet.sk[i - 1].y2, skSet.sk[i - 1].x2, y1);
+		return;
+	}
+
+	double x2, y2;
+	rtPt(0.0, r, -c.edDeg, x2, y2);
+	x2 += c.rx, y2 += c.ry;
+	sk.x2 = x2, sk.y2 = y2;
+
+	skSet.insertLine(i + 1, x2, y2, skSet.sk[i + 1].x1, y2);
+	skSet.insertLine(i + 1, skSet.sk[i + 1].x1, y2, skSet.sk[i + 1].x1, skSet.sk[i + 1].y1);
+}
+
+void SilkScreenOutput::addArcSafetyLine(int &i, SilkSet &skSet) {
+	if (i > 0 && skSet.sk[i - 1].isLine) {
+		addTurningPoint(i, skSet, true);
+		//back to arc
+		i += 2;
+	}
+
+	if (i + 1 < skSet.sk.size() && skSet.sk[i + 1].isLine) {
+		addTurningPoint(i, skSet, false);
+		//move out arc & addTurningPoint
+		i += 3;
+	}
+}
+
+void SilkScreenOutput::arcLineCheck(SilkSet &skSet) {
+	for (int i = 0; i < skSet.sk.size(); ++i) {
+		if (skSet.sk[i].isLine == false && skSet.sk[i].isCW == false) {
+			addArcSafetyLine(i, skSet);
 		}
+	}
+}
+
+void SilkScreenOutput::silkScreenModify() {
+	for (int i = 0; i < skSt.size(); ++i) {
+		arcLineCheck(skSt[i]);
 	}
 }
 
@@ -90,5 +143,6 @@ void SilkScreenOutput::ResultOutput(string fileName, Polygom &assembly, BoostMul
 			outputSilkscreen(bgDiff[i], assembly.cyclePt);
 		}
 	}
+	silkScreenModify();
 	write(fileName);
 }

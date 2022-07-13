@@ -24,3 +24,8 @@ bool isLargerEnough(BoostLineString silkScreen, const double silkscreenlen) {
 	//cout << "Len : " << bg::length(silkScreen) << endl;
 	return (bg::length(silkScreen)) > silkscreenlen;
 }
+
+void rtPt(double curX, double curY, double deg, double &nxtX, double &nxtY) {
+	nxtX = curX * cos(deg*PI / 180.0) - curY * sin(deg*PI / 180.0);
+	nxtY = curX * sin(deg*PI / 180.0) + curY * cos(deg*PI / 180.0);
+}

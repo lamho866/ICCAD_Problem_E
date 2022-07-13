@@ -27,3 +27,22 @@ void Polygom::addLine(string &s) {
 
 }
 
+bool Polygom::isNear(double x1, double y1, double x2, double y2) {
+	double dist = sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+	return dist <= 0.0002;
+}
+
+bool Polygom::isConnect(Cycle a, Cycle b) {
+	return a.almost_equal(a.x2, b.x1) && a.almost_equal(a.y2, b.y1);
+}
+
+void Polygom::cyclePtCombe() {
+
+	for (int i = 0; i < static_cast<int>(cyclePt.size() - 1); ++i) {
+		if (isNear(cyclePt[i].rx, cyclePt[i].ry, cyclePt[i + 1].rx, cyclePt[i + 1].ry) && isConnect(cyclePt[i], cyclePt[i + 1]))
+		{
+			cyclePt[i].edDeg = cyclePt[i + 1].edDeg;
+			cyclePt.erase(cyclePt.begin() + i + 1);
+		}
+	}
+}

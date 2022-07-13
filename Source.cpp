@@ -82,11 +82,13 @@ int main()
 	BoostMultipolygon cropperMulLsBuffer;
 	buildAssemblyLine(assembly, assemblygap, multiCropperLs, croppergap, cropperMulLsBuffer, bgDiff);
 
+	assembly.cyclePtCombe();
 	SilkScreenOutput silkScreenOutput(silkscreenlen, assemblygap, assembly.cyclePt);
 	silkScreenOutput.ResultOutput(rFile, assembly, multBGCropper, bgDiff);
+	
 
 	//GraphDraw
-	checkoutPutResult(rFile, assembly, bgAssembly, multBGCropper, cropperMulLsBuffer);
+	checkoutPutResult(rFile, assembly, bgAssembly, multBGCropper, cropperMulLsBuffer, silkScreenOutput.cycleList);
 	resultSample(rFile, assembly, bgAssembly, multBGCropper, cropperMulLsBuffer, silkScreenOutput.cycleList, bgDiff, silkscreenlen);
 
 	//ScoreCheck
