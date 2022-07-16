@@ -63,7 +63,7 @@ bool Cycle::almost_equal(double x, double y)
 }
 
 bool Cycle::inRange(double deg, double st, double ed) {
-	return (almost_equal(st, deg) || st < deg) && (ed < deg || almost_equal(ed, deg));
+	return (almost_equal(st, deg) || st < deg) && (deg < ed || almost_equal(deg, ed));
 }
 
 bool Cycle::degInRange(double x, double y) {
