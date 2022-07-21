@@ -1,12 +1,13 @@
 #include "Silk.h"
 
 Silk::Silk(bool _isLine, double _x1, double _y1, double _x2, double _y2, double _rx, double _ry, bool _isCW, int _cyclePtIdx) : isLine(_isLine), cyclePtIdx(_cyclePtIdx), Cycle(_x1, _y1, _x2, _y2, _rx, _ry, _isCW){
+	len = 0.0;
 	dist();
 }
 
 Silk::Silk(): isLine(false), len(0.0), cyclePtIdx(-1), Cycle(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, false) {}
 
-Silk::Silk(const Silk &sk) : isLine(sk.isLine), cyclePtIdx(sk.cyclePtIdx), Cycle(sk.x1, sk.y1, sk.x2, sk.y2, sk.rx, sk.ry, sk.isCW){}
+Silk::Silk(const Silk &sk) : len(sk.len), isLine(sk.isLine), cyclePtIdx(sk.cyclePtIdx), Cycle(sk.x1, sk.y1, sk.x2, sk.y2, sk.rx, sk.ry, sk.isCW){}
 
 Silk& Silk::operator=(const Silk& sk) {
 	x1 = sk.x1, x2 = sk.x2;
