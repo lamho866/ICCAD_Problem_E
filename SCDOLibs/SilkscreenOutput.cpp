@@ -1,14 +1,21 @@
 #include "SilkscreenOutput.h"
 
-SilkScreenOutput::SilkScreenOutput(double _silkscreenlen, double _assemblygap, vector<Cycle> &cyclePoint) : silkscreenlen(_silkscreenlen), assemblygap(_assemblygap), cyclePt(cyclePoint){
+SilkScreenOutput::SilkScreenOutput(double _silkscreenlen, double _assemblygap, vector<Cycle> &cyclePoint) : silkscreenlen(_silkscreenlen), assemblygap(_assemblygap), cyclePt(cyclePoint) {
 	makeCycleEachPoint(cyclePt, assemblygap, cycleList);
 }
 
 void SilkScreenOutput::write(string &fileName) {
+	if (canWrite.size() != skSt.size()) {
+		canWrite.resize(skSt.size());
+		fill(canWrite.begin(), canWrite.end(), true);
+	}
+
 	ofstream resultFile(fileName + ".txt");
 	for (int i = 0; i < skSt.size(); ++i) {
-		resultFile << "silkscreen\n";
-		skSt[i].write(resultFile);
+		if (canWrite[i]) {
+			resultFile << "silkscreen\n";
+			skSt[i].write(resultFile);
+		}
 	}
 	resultFile.close();
 }
@@ -29,7 +36,7 @@ void SilkScreenOutput::makeCycleEachPoint(vector<Cycle> &cyclePt, const double a
 	}
 }
 
-void SilkScreenOutput::intputCycle(BoostPolygon cyclePolygon, Cycle cycle, BoostLineString &ls,int cIdx, int &i) {
+void SilkScreenOutput::intputCycle(BoostPolygon cyclePolygon, Cycle cycle, BoostLineString &ls, int cIdx, int &i) {
 	double x1, x2, y1, y2;
 	getPointData(ls[i], x1, y1);
 	double x = x1, y = y1;
@@ -55,7 +62,7 @@ bool SilkScreenOutput::collinear(BoostPoint pt1, BoostPoint pt2, BoostPoint pt3)
 	return abs(a) <= std::numeric_limits<double>::epsilon();
 }
 
-void SilkScreenOutput::drawLine(BoostLineString &ls, int &i){
+void SilkScreenOutput::drawLine(BoostLineString &ls, int &i) {
 	double x1, x2, y1, y2;
 	getPointData(ls[i], x1, y1);
 	int j = i + 2;
@@ -79,7 +86,7 @@ void SilkScreenOutput::outputSilkscreen(BoostLineString &ls, vector<Cycle> assem
 				break;
 			}
 		}
-		if(i < ls.size() - 1)
+		if (i < ls.size() - 1)
 			drawLine(ls, i);
 	}
 }
@@ -144,5 +151,54 @@ void SilkScreenOutput::ResultOutput(string fileName, Polygom &assembly, BoostMul
 		}
 	}
 	silkScreenModify();
+	dropLs();
 	write(fileName);
+}
+
+void SilkScreenOutput::isCoordEquals(double max_cr, double cur_max, int &cnt) {
+	if (almost_equal(max_cr, cur_max)) cnt++;
+}
+
+void SilkScreenOutput::cntMaxMin(double max_x, double max_y, double min_x, double min_y, int &max_x_cnt, int &max_y_cnt, int &min_x_cnt, int &min_y_cnt, SilkSet &skSt) {
+	isCoordEquals(max_x, skSt.max_x, max_x_cnt);
+	isCoordEquals(max_y, skSt.max_y, max_y_cnt);
+	isCoordEquals(min_x, skSt.min_x, min_x_cnt);
+	isCoordEquals(min_y, skSt.min_y, min_y_cnt);
+}
+
+void SilkScreenOutput::dropLs() {
+	canWrite.resize(skSt.size());
+	fill(canWrite.begin(), canWrite.end(), true);
+
+	double max_x = -9999.0, min_x = 9999.0, max_y = -9999.0, min_y = 9999.0;
+	
+	for (int i = 0; i < skSt.size(); ++i) {
+		skSt[i].updateMinMaxCoord();
+		max_x = max(max_x, skSt[i].max_x), max_y = max(max_y, skSt[i].max_y);
+		min_x = min(min_x, skSt[i].min_x), min_y = min(min_y, skSt[i].min_y);
+	}
+
+	int max_x_cnt = 0, max_y_cnt = 0, min_x_cnt = 0, min_y_cnt = 0;
+	for (int i = 0; i < skSt.size(); ++i) {
+		cntMaxMin(max_x, max_y, min_x, min_y, max_x_cnt, max_y_cnt, min_x_cnt, min_y_cnt, skSt[i]);
+	}
+
+	sort(skSt.begin(), skSt.end());
+
+	for (int i = 0; i < skSt.size(); ++i) {
+		int cur_max_x = 0, cur_max_y = 0, cur_min_x = 0, cur_min_y = 0;
+		cntMaxMin(max_x, max_y, min_x, min_y, cur_max_x, cur_max_y, cur_min_x, cur_min_y, skSt[i]);
+	
+		if (max_x_cnt - cur_max_x > 0 && 
+			max_y_cnt - cur_max_y > 0 && 
+			min_x_cnt - cur_min_x > 0 && 
+			min_y_cnt - cur_min_y > 0) {
+			
+			max_x_cnt -= cur_max_x;
+			max_y_cnt -= cur_max_y;
+			min_x_cnt -= cur_min_x;
+			min_y_cnt -= cur_min_y;
+			canWrite[i] = false;
+		}
+	}
 }
