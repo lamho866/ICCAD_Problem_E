@@ -21,13 +21,18 @@ typedef bg::model::polygon<BoostPoint> BoostPolygon;
 typedef bg::model::multi_polygon<BoostPolygon> BoostMultipolygon;
 typedef bg::model::multi_linestring<BoostLineString> BoostMultiLineString;
 
+
 int main()
 {
+	//string pFile = "PublicCase/PublicCase_A";
+	//string rFile = "ResultPublicCase/Result_A";
+
 	string pFile = "Problem";
 	string rFile = "Result";
 
 	Polygom assembly;
 	BoostPolygon bgAssembly;
+	BoostLineString assemblyLs;
 
 	vector<Polygom> cropperList;
 	BoostMultipolygon multBGCropper;
@@ -38,7 +43,6 @@ int main()
 	string str;
 	double assemblygap, croppergap, silkscreenlen;
 	int cropSize = 0;
-
 	std::ifstream input(pFile + ".txt");
 	input >> str;
 	assemblygap = atof(str.substr(12).c_str());
@@ -48,6 +52,9 @@ int main()
 	silkscreenlen = atof(str.substr(14).c_str());
 	input >> str;
 
+	croppergap += 0.0001;
+	assemblygap += 0.0001;
+
 	//assembly
 	while (1) {
 		input >> str;
@@ -55,6 +62,7 @@ int main()
 		assembly.addLine(str);
 	}
 	makeThePolygonShape(assembly, bgAssembly);
+	makeLine(assembly, assemblyLs);
 
 	//cropper
 	cropperList.push_back(Polygom());
@@ -83,9 +91,9 @@ int main()
 	buildAssemblyLine(assembly, assemblygap, multiCropperLs, croppergap, cropperMulLsBuffer, bgDiff);
 
 	assembly.cyclePtCombe();
-	SilkScreenOutput silkScreenOutput(silkscreenlen, assemblygap, assembly.cyclePt);
+	SilkScreenOutput silkScreenOutput(silkscreenlen, assemblygap, assembly.cyclePt, assemblyLs);
 	silkScreenOutput.ResultOutput(rFile, assembly, multBGCropper, bgDiff);
-	
+
 
 	//GraphDraw
 	checkoutPutResult(rFile, assembly, bgAssembly, multBGCropper, cropperMulLsBuffer, silkScreenOutput.cycleList);
@@ -94,6 +102,8 @@ int main()
 	//ScoreCheck
 	ScoreCheck scoreCheck(pFile, rFile);
 	scoreCheck.showScoreResult();
+
+	printf("AssemblySize: %d\n", assembly.cyclePt.size());
+
 	system("pause");
 }
-

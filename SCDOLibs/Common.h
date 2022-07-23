@@ -21,3 +21,7 @@ void makeLine(Polygom &polyShape, BoostLineString &bgLineStr);
 bool isLargerEnough(BoostLineString silkScreen, const double silkscreenlen);
 
 void rtPt(double curX, double curY, double deg, double &nxtX, double &nxtY);
+
+bool almost_equal(double x, double y);
+
+void findCoordMaxMin(BoostLineString ls, double &max_x, double &max_y, double &min_x, double &min_y);
