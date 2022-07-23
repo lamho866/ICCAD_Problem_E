@@ -1,6 +1,7 @@
 #include "SilkscreenOutput.h"
 
-SilkScreenOutput::SilkScreenOutput(double _silkscreenlen, double _assemblygap, vector<Cycle> &cyclePoint) : silkscreenlen(_silkscreenlen), assemblygap(_assemblygap), cyclePt(cyclePoint) {
+SilkScreenOutput::SilkScreenOutput(double _silkscreenlen, double _assemblygap, vector<Cycle> &cyclePoint, BoostLineString assemblyLs) : silkscreenlen(_silkscreenlen), assemblygap(_assemblygap), cyclePt(cyclePoint) {
+	findCoordMaxMin(assemblyLs, as_max_x, as_max_y, as_min_x, as_min_y);
 	makeCycleEachPoint(cyclePt, assemblygap, cycleList);
 }
 
@@ -150,9 +151,39 @@ void SilkScreenOutput::ResultOutput(string fileName, Polygom &assembly, BoostMul
 			outputSilkscreen(bgDiff[i], assembly.cyclePt);
 		}
 	}
-	silkScreenModify();
-	dropLs();
+	//silkScreenModify();
+	
+	skStCoordSetUp();
+	/*
+	printf("\n----------------------\n");
+	printf("assembly:\n");
+	printf("maxX: %lf, maxY: %lf, minX: %lf, minY: %lf\n", as_max_x, as_max_y, as_min_x, as_min_y);
+	printf("SilkSet:\n");
+	printf("maxX: %lf, maxY: %lf, minX: %lf, minY: %lf\n", skSt_max_x, skSt_max_y, skSt_min_x, skSt_min_y);
+	printf("\n----------------------\n");
+	*/
+	silkCoordMinXSafety();
+	silkCoordMaxXSafety();
+	silkCoordMinYSafety();
+	silkCoordMaxYSafety();
+
+	skStCoordSetUp();
+	//dropLs();
 	write(fileName);
+}
+
+void SilkScreenOutput::skStCoordSetUp() {
+	if (skSt.size() == 0) return;
+
+	skSt[0].updateMinMaxCoord();
+	skSt_max_x = skSt[0].max_x, skSt_min_x = skSt[0].min_x;
+	skSt_max_y = skSt[0].max_y, skSt_min_y = skSt[0].min_y;
+
+	for (int i = 1; i < skSt.size(); ++i) {
+		skSt[i].updateMinMaxCoord();
+		skSt_max_x = max(skSt_max_x, skSt[i].max_x), skSt_min_x = min(skSt_min_x, skSt[i].min_x);
+		skSt_max_y = max(skSt_max_y, skSt[i].max_y), skSt_min_y = min(skSt_min_y, skSt[i].min_y);
+	}
 }
 
 void SilkScreenOutput::isCoordEquals(double max_cr, double cur_max, int &cnt) {
@@ -171,9 +202,9 @@ void SilkScreenOutput::dropLs() {
 	fill(canWrite.begin(), canWrite.end(), true);
 
 	double max_x = -9999.0, min_x = 9999.0, max_y = -9999.0, min_y = 9999.0;
-	
+
+
 	for (int i = 0; i < skSt.size(); ++i) {
-		skSt[i].updateMinMaxCoord();
 		max_x = max(max_x, skSt[i].max_x), max_y = max(max_y, skSt[i].max_y);
 		min_x = min(min_x, skSt[i].min_x), min_y = min(min_y, skSt[i].min_y);
 	}
@@ -199,6 +230,97 @@ void SilkScreenOutput::dropLs() {
 			min_x_cnt -= cur_min_x;
 			min_y_cnt -= cur_min_y;
 			canWrite[i] = false;
+		}
+	}
+}
+
+void SilkScreenOutput::silkCoordMinXSafety() {
+	if (skSt_min_x < as_min_x) return;
+	sort(skSt.begin(), skSt.end(), minXCmp);
+	for (int i = 0; i < skSt.size(); ++i) {
+		SilkSet temp = skSt[i];
+		Silk head = temp.sk[0];
+		Silk tail = temp.sk[temp.sk.size() - 1];
+		if (head.x1 < tail.x1) {
+			//insertHead
+			skSt[i].insertLine(0, as_min_x, head.y1, head.x1, head.y1);
+			//notCover the Cropper
+			return;
+		}
+		else {
+			//insertTail
+			skSt[i].insertLine(temp.sk.size(), tail.x2, tail.y2, as_min_x, tail.y2);
+			//notCover the Cropper
+			return;
+		}
+	}
+}
+
+void SilkScreenOutput::silkCoordMaxXSafety() {
+	if (skSt_max_x > as_max_x) return;
+	sort(skSt.begin(), skSt.end(), maxXCmp);
+
+	for (int i = 0; i < skSt.size(); ++i) {
+		SilkSet temp = skSt[i];
+		Silk head = temp.sk[0];
+		Silk tail = temp.sk[temp.sk.size() - 1];
+		if (head.x1 < tail.x1) {
+			//insertHead
+			skSt[i].insertLine(0, as_max_x, head.y1, head.x1, head.y1);
+			//notCover the Cropper
+			return;
+		}
+		else {
+			//insertTail
+			skSt[i].insertLine(temp.sk.size(), tail.x2, tail.y2, as_max_x, tail.y2);
+			//notCover the Cropper
+			return;
+		}
+	}
+}
+
+void SilkScreenOutput::silkCoordMinYSafety() {
+	if (skSt_min_y < as_min_y) return;
+	sort(skSt.begin(), skSt.end(), minYCmp);
+
+	for (int i = 0; i < skSt.size(); ++i) {
+		SilkSet temp = skSt[i];
+		Silk head = temp.sk[0];
+		Silk tail = temp.sk[temp.sk.size() - 1];
+		if (head.y1 < tail.y2) {
+			//insertHead
+			skSt[i].insertLine(0, head.x1, as_min_y, head.x1, head.y1);
+			//notCover the Cropper
+			return;
+		}
+		else {
+			//insertTail
+			skSt[i].insertLine(temp.sk.size(), tail.x2, tail.y2, tail.x2, as_min_y);
+			//notCover the Cropper
+			return;
+		}
+	}
+}
+
+void SilkScreenOutput::silkCoordMaxYSafety() {
+	if (skSt_max_y > as_max_y) return;
+	sort(skSt.begin(), skSt.end(), maxYCmp);
+
+	for (int i = 0; i < skSt.size(); ++i) {
+		SilkSet temp = skSt[i];
+		Silk head = temp.sk[0];
+		Silk tail = temp.sk[temp.sk.size() - 1];
+		if (head.y1 > tail.y2) {
+			//insertHead
+			skSt[i].insertLine(0, head.x1, as_max_y, head.x1, head.y1);
+			//notCover the Cropper
+			return;
+		}
+		else {
+			//insertTail
+			skSt[i].insertLine(temp.sk.size(), tail.x2, tail.y2, tail.x2, as_max_y);
+			//notCover the Cropper
+			return;
 		}
 	}
 }
