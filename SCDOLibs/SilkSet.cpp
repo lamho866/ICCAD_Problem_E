@@ -1,6 +1,9 @@
 #include "SilkSet.h"
 
-SilkSet::SilkSet() : line(0), arc(0), len(0.0), max_x(0.0), max_y(0.0), min_x(0.0), min_y(0.0) {}
+SilkSet::SilkSet() :
+	line(0), arc(0), len(0.0), max_x(0.0), max_y(0.0), min_x(0.0), min_y(0.0),
+	max_x_cnt(0), max_y_cnt(0), min_x_cnt(0), min_y_cnt(0)
+	{}
 
 SilkSet::SilkSet(const SilkSet &skSt) : line(skSt.line), arc(skSt.line), len(skSt.len)
 , max_x(skSt.max_x), max_y(skSt.max_y), min_x(skSt.min_x), min_y(skSt.min_y) {

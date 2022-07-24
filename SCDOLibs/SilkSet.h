@@ -17,7 +17,7 @@ public:
 	int line, arc;
 	
 	double max_x, max_y, min_x, min_y;
-	int max_x_cnt = 0, max_y_cnt = 0, min_x_cnt = 0, min_y_cnt = 0;
+	int max_x_cnt, max_y_cnt, min_x_cnt, min_y_cnt;
 
 	double len;
 	SilkSet();

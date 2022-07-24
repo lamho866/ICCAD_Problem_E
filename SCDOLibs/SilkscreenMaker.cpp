@@ -7,13 +7,6 @@ boost::geometry::strategy::buffer::end_flat end_strategy;
 boost::geometry::strategy::buffer::side_straight side_strategy;
 boost::geometry::strategy::buffer::point_circle point_strategy;
 
-template<class T>
-typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type
-almost_equal(T x, T y)
-{
-	return abs(x - y) <= std::numeric_limits<double>::epsilon();
-}
-
 int countStartPoint(BoostLineString &ls, const double tagX, const double tagY) {
 	int cnt = 0;
 	for (int i = 0; i < ls.size(); ++i) {
