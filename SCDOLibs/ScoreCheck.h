@@ -39,11 +39,14 @@ private:
 	double scoreCal(double score, double percent);
 	double avgCropperDistance(vector<BoostLineString> &resultLs, BoostMultipolygon &multBGCropper);
 	double score_assemblyAreaBuffer();
-	
+	void readLineData(string s, double &x1, double &y1, double &x2, double &y2);
+
 	void scoreCase1();
 	void scoreCase2(BoostLineString &assemblyLs);
 	void scoreCase3();
 	void scoreCase4();
+	void lineConnectTest();
+	void silkScreenLenTest();
 public:
 	ScoreCheck(string &_pFile, string &_rFile);
 	void readContestFile();

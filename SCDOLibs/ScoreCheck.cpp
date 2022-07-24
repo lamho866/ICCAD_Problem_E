@@ -37,24 +37,39 @@ double ScoreCheck::score_assemblyAreaBuffer() {
 }
 
 void ScoreCheck::scoreCase1() {
-	double max_x = 0.0, max_y = 0.0;
-	double min_x = 9999.0, min_y = 9999.0;
-
-	for (int i = 0; i < resultLs.size(); ++i) {
-		BoostLineString curLs = resultLs[i];
-		for (int j = 0; j < curLs.size(); ++j) {
-			double x, y;
-			getPointData(curLs[j], x, y);
-			max_x = max(max_x, x), max_y = max(max_y, y);
-			min_x = min(min_x, x), min_y = min(min_y, y);
-		}
+	
+	double sk_max_x, sk_max_y, sk_min_x, sk_min_y;
+	double as_max_x, as_max_y, as_min_x, as_min_y;
+	BoostLineString assemblyLs;
+	makeLine(assembly, assemblyLs);
+	findCoordMaxMin(assemblyLs, as_max_x, as_max_y, as_min_x, as_min_y);
+	
+	findCoordMaxMin(resultLs[0], sk_max_x, sk_max_y, sk_min_x, sk_min_y);
+	for (int i = 1; i < resultLs.size(); ++i) {
+		double cur_max_x, cur_max_y, cur_min_x, cur_min_y;
+		findCoordMaxMin(resultLs[i], cur_max_x, cur_max_y, cur_min_x, cur_min_y);
+		sk_max_x = max(sk_max_x, cur_max_x), sk_min_x = min(sk_min_x, cur_min_x);
+		sk_max_y = max(sk_max_y, cur_max_y), sk_min_y = min(sk_min_y, cur_min_y);
 	}
 
 	double assemblyArea = score_assemblyAreaBuffer();
-	double silkscreenArea = (max_x - min_x) * (max_y - min_y);
+	double silkscreenArea = (sk_max_x - sk_min_x) * (sk_max_y - sk_min_y);
 	printf("AssmblyArea : %lf, silkscreenArea : %lf\n", assemblyArea, silkscreenArea);
 	double score = scoreCal( (2.0 - silkscreenArea / assemblyArea) , 0.25);
 	printf("S1 = %lf\n", score);
+	printf("");
+	printf("assembly:\n");
+	printf("maxX: %lf, maxY: %lf, minX: %lf, minY: %lf\n", as_max_x, as_max_y, as_min_x, as_min_y);
+	printf("SilkSet:\n");
+	printf("maxX: %lf, maxY: %lf, minX: %lf, minY: %lf\n", sk_max_x, sk_max_y, sk_min_x, sk_min_y);
+
+	printf("");
+	if (sk_max_x >= as_max_x &&
+		sk_max_y >= as_max_y &&
+		sk_min_x <= as_min_x &&
+		sk_min_y <= as_min_y)
+		printf("legal\n");
+	else printf("illegal\n");
 }
 void ScoreCheck::scoreCase2(BoostLineString &assemblyLs) {
 	//Part - A
@@ -199,6 +214,65 @@ void ScoreCheck::readResultFile() {
 	input.close();
 }
 
+void ScoreCheck::readLineData(string s, double &x1, double &y1, double &x2, double &y2) {
+	if (s[0] == 'l') {
+		//isLine
+		sscanf(s.c_str() + 5, "%lf,%lf,%lf,%lf\n", &x1, &y1, &x2, &y2);
+		return;
+	}
+	if (s[0] == 'a') {
+		char unUsed[45];
+		sscanf(s.c_str() + 4, "%lf,%lf,%lf,%lf,%s\n", &x1, &y1, &x2, &y2, unUsed);
+	}
+}
+
+void ScoreCheck::lineConnectTest() {
+	string str;
+	fstream input(rFile);
+	double ftX, ftY;
+	double x1, y1, x2, y2, preX, preY;
+	bool isLegal = true, ft = true;
+	input >> str;
+	input >> str;
+	input >> str;
+	input >> str;
+
+	while (input >> str) {
+		if (str[0] == 's') {
+			ft = true;
+			continue;
+		}
+		if (ft) {
+			readLineData(str, ftX, ftY, preX, preY);
+			ft = false;
+			continue;
+		}
+		readLineData(str, x1, y1, x2, y2);
+		if (!almost_equal(preX, x1) || !almost_equal(preY, y1)) {
+			isLegal = false;
+		}
+		preX = x2, preY = y2;
+	}
+	input.close();
+	printf("silkScreen Is Connect Test\n");
+	if (isLegal) printf("legal\n");
+	else printf("illegal\n");
+	printf("-----------------------------------------\n");
+}
+
+void ScoreCheck::silkScreenLenTest() {
+	printf("silkScreenLenTest\n");
+	bool isLegal = true;
+	for(int i = 0; i < resultLs.size(); ++i)
+		if (bg::length(resultLs[i]) < silkscreenlen) {
+			isLegal = false;
+			break;
+		}
+	if (isLegal) printf("legal\n");
+	else printf("illegal\n");
+	printf("-----------------------------------------\n");
+}
+
 void ScoreCheck::showScoreResult() {
 	readContestFile();
 	//printf("readContestFile Done\n");
@@ -208,9 +282,11 @@ void ScoreCheck::showScoreResult() {
 	BoostMultiLineString assemblyMultLine;
 	assemblyBuffer(assembly, assemblygap, assemblyMultLine);
 
+	lineConnectTest();
+	silkScreenLenTest();
 	scoreCase1();
 	scoreCase2(assemblyMultLine[0]);
 	scoreCase3();
 	scoreCase4();
-	printf("---------------------------\n");
+	printf("------------------------------------------\n");
 }
