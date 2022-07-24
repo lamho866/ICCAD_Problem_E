@@ -26,6 +26,7 @@ private:
 	void isCoordEquals(double max_cr, double cur_max, int &cnt);
 	void cntMaxMin(double max_x, double max_y, double min_x, double min_y, int &max_x_cnt, int &max_y_cnt, int &min_x_cnt, int &min_y_cnt, SilkSet &sk);
 	void skStCoordSetUp();
+	bool isIlegealAddLine(double x1, double y1, double x2, double y2);
 	//int inCycleIdx(int i, BoostLineString &ls, double x, double y);
 	//bool isInMoreCycle(int i, BoostLineString &ls, int cIdx, double x, double y);
 public:
@@ -36,8 +37,10 @@ public:
 	vector<bool> canWrite;
 	double as_max_x, as_max_y, as_min_x, as_min_y;
 	double skSt_max_x, skSt_max_y, skSt_min_x, skSt_min_y;
+	BoostMultipolygon &cropperMulLsBufferRef;
+	BoostPolygon &bgAssemblyRef;
 
-	SilkScreenOutput(double _silkscreenlen, double _assemblygap, vector<Cycle> &cyclePoint, BoostLineString assemblyLs);
+	SilkScreenOutput(double _silkscreenlen, double _assemblygap, BoostPolygon &bgAssembly, vector<Cycle> &cyclePoint, BoostLineString assemblyLs, BoostMultipolygon &cropperMulLsBuffer);
 
 	void makeCycleEachPoint(vector<Cycle> &cyclePt, const double assemblyGap, vector<BoostPolygon> &cycleList);
 

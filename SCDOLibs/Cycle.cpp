@@ -50,6 +50,8 @@ double Cycle::coordDeg(double x, double y) {
 }
 
 double Cycle::deg(bool isCW) {
+	if (almost_equal(x1, x2) && almost_equal(y1, y2)) return 360.0;
+
 	double curDeg = edDeg - stDeg;
 	if (curDeg < 0.0) curDeg += 360.0;
 
