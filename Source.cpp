@@ -26,6 +26,7 @@ int main()
 {
 	//string pFile = "PublicCase/PublicCase_A";
 	//string rFile = "ResultPublicCase/Result_A";
+	
 
 	string pFile = "Problem";
 	string rFile = "Result";
@@ -91,7 +92,7 @@ int main()
 	buildAssemblyLine(assembly, assemblygap, multiCropperLs, croppergap, cropperMulLsBuffer, bgDiff);
 
 	assembly.cyclePtCombe();
-	SilkScreenOutput silkScreenOutput(silkscreenlen, assemblygap, assembly.cyclePt, assemblyLs);
+	SilkScreenOutput silkScreenOutput(silkscreenlen, assemblygap, bgAssembly, assembly.cyclePt, assemblyLs, cropperMulLsBuffer);
 	silkScreenOutput.ResultOutput(rFile, assembly, multBGCropper, bgDiff);
 
 
@@ -107,3 +108,4 @@ int main()
 
 	system("pause");
 }
+
