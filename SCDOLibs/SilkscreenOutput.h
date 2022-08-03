@@ -37,10 +37,10 @@ public:
 	vector<bool> canWrite;
 	double as_max_x, as_max_y, as_min_x, as_min_y;
 	double skSt_max_x, skSt_max_y, skSt_min_x, skSt_min_y;
-	BoostMultipolygon &cropperMulLsBufferRef;
+	BoostMultipolygon &cropperMulLsBufferRef, &multBGCropperRef;
 	BoostPolygon &bgAssemblyRef;
 
-	SilkScreenOutput(double _silkscreenlen, double _assemblygap, BoostPolygon &bgAssembly, vector<Cycle> &cyclePoint, BoostLineString assemblyLs, BoostMultipolygon &cropperMulLsBuffer);
+	SilkScreenOutput(double _silkscreenlen, double _assemblygap, BoostPolygon &bgAssembly, vector<Cycle> &cyclePoint, BoostLineString assemblyLs, BoostMultipolygon &cropperMulLsBuffer, BoostMultipolygon &multBGCropper);
 
 	void makeCycleEachPoint(vector<Cycle> &cyclePt, const double assemblyGap, vector<BoostPolygon> &cycleList);
 

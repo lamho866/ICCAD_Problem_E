@@ -1,6 +1,6 @@
 #pragma once
 #include "Common.h"
-#include "Polgyom.h"
+#include "Polygom.h"
 #include "SilkscreenMaker.h"
 
 #include <iostream>

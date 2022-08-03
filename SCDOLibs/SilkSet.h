@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Silk.h"
-#include "Polgyom.h"
+#include "Polygom.h"
 #include "Common.h"
 #include <vector>
 #include <algorithm>
@@ -22,8 +22,8 @@ public:
 	double len;
 	SilkSet();
 	SilkSet(const SilkSet &skSt);
-	SilkSet& operator=(const SilkSet& skSt);
-	bool operator<(SilkSet const& b);
+	SilkSet& operator=(const SilkSet &skSt);
+	bool operator< (SilkSet const& b) const;
 	
 	void updateMinMaxCoord();
 	void write(ofstream &file);
@@ -33,7 +33,7 @@ public:
 	void insertLine(int i, double x1, double y1, double x2, double y2);
 };
 
-bool minXCmp(SilkSet &a, SilkSet &b);
-bool minYCmp(SilkSet &a, SilkSet &b);
-bool maxXCmp(SilkSet &a, SilkSet &b);
-bool maxYCmp(SilkSet &a, SilkSet &b);
+bool minXCmp(const SilkSet &a,const SilkSet &b);
+bool minYCmp(const SilkSet &a,const SilkSet &b);
+bool maxXCmp(const SilkSet &a,const SilkSet &b);
+bool maxYCmp(const SilkSet &a,const SilkSet &b);

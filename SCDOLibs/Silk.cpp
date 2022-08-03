@@ -9,7 +9,7 @@ Silk::Silk(): isLine(false), len(0.0), cyclePtIdx(-1), Cycle(0.0, 0.0, 0.0, 0.0,
 
 Silk::Silk(const Silk &sk) : len(sk.len), isLine(sk.isLine), cyclePtIdx(sk.cyclePtIdx), Cycle(sk.x1, sk.y1, sk.x2, sk.y2, sk.rx, sk.ry, sk.isCW){}
 
-Silk& Silk::operator=(const Silk& sk) {
+Silk& Silk::operator=(const Silk &sk) {
 	x1 = sk.x1, x2 = sk.x2;
 	y1 = sk.y1, y2 = sk.y2;
 	rx = sk.rx, ry = sk.ry;

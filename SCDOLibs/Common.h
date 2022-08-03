@@ -1,5 +1,5 @@
 #pragma once
-#include "Polgyom.h"
+#include "Polygom.h"
 #include <boost/geometry/geometry.hpp>
 
 namespace bg = boost::geometry;

@@ -97,7 +97,6 @@ void assemblyBuffer(Polygom &assembly, const double assemblygap, BoostMultiLineS
 		removeConnectPoint(assemblyLs, tagX, tagY), startPtCnt--;
 
 	modifyStartPoint(assemblyLs, tagX, tagY);
-
 	assemblyMultLine.push_back(assemblyLs);
 }
 

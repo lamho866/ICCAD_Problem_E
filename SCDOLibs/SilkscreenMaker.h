@@ -1,5 +1,5 @@
 #pragma once
-#include "Polgyom.h"
+#include "Polygom.h"
 #include "Common.h"
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>

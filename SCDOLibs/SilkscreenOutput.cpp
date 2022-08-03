@@ -1,7 +1,7 @@
 #include "SilkscreenOutput.h"
 
-SilkScreenOutput::SilkScreenOutput(double _silkscreenlen, double _assemblygap, BoostPolygon &bgAssembly, vector<Cycle> &cyclePoint, BoostLineString assemblyLs, BoostMultipolygon &cropperMulLsBuffer) :
-	silkscreenlen(_silkscreenlen), assemblygap(_assemblygap), bgAssemblyRef(bgAssembly), cyclePt(cyclePoint), cropperMulLsBufferRef(cropperMulLsBuffer){
+SilkScreenOutput::SilkScreenOutput(double _silkscreenlen, double _assemblygap, BoostPolygon &bgAssembly, vector<Cycle> &cyclePoint, BoostLineString assemblyLs, BoostMultipolygon &cropperMulLsBuffer, BoostMultipolygon &multBGCropper) :
+	silkscreenlen(_silkscreenlen), assemblygap(_assemblygap), bgAssemblyRef(bgAssembly), cyclePt(cyclePoint), cropperMulLsBufferRef(cropperMulLsBuffer), multBGCropperRef(multBGCropper){
 	findCoordMaxMin(assemblyLs, as_max_x, as_max_y, as_min_x, as_min_y);
 	makeCycleEachPoint(cyclePt, assemblygap, cycleList);
 }
@@ -82,12 +82,14 @@ void SilkScreenOutput::outputSilkscreen(BoostLineString &ls, vector<Cycle> assem
 	int i = 0;
 	for (; i < ls.size() - 1; ++i) {
 		getPointData(ls[i], x, y);
+		/*
 		for (int cIdx = 0; cIdx < cycleList.size(); ++cIdx) {
 			if (bg::within(ls[i], cycleList[cIdx]) && cyclePt[cIdx].degInRange(x, y)) {
 				intputCycle(cycleList[cIdx], assemblyCycleList[cIdx], ls, cIdx, i);
 				break;
 			}
 		}
+		*/
 		if (i < ls.size() - 1)
 			drawLine(ls, i);
 	}
@@ -244,9 +246,15 @@ bool SilkScreenOutput::isIlegealAddLine(double x1, double y1, double x2, double 
 	makeLine(addLsPoly, addLs);
 	//touches: Checks if two geometries have at least one touching point (tangent - non overlapping)
 	//intersects: Checks if two geometries have at least one intersection.
+	if (bg::intersects(addLs, bgAssemblyRef) || bg::intersects(addLs, multBGCropperRef)) return true;
+	if (bg::intersects(addLs, cropperMulLsBufferRef) && !bg::touches(addLs, cropperMulLsBufferRef)) return true;
+	return false;
+
+	/*
 	return
 		(bg::intersects(addLs, cropperMulLsBufferRef) && !bg::touches(addLs, cropperMulLsBufferRef)) ||
-		bg::intersects(addLs, bgAssemblyRef);
+		bg::intersects(addLs, bgAssemblyRef) || bg::intersects(addLs, multBGCropperRef);
+		*/
 }
 
 void SilkScreenOutput::silkCoordMinXSafety() {
@@ -257,16 +265,14 @@ void SilkScreenOutput::silkCoordMinXSafety() {
 		SilkSet temp = skSt[i];
 		Silk head = temp.sk[0];
 		Silk tail = temp.sk[temp.sk.size() - 1];
+		//insertTail
+		if (!isIlegealAddLine(tail.x2, tail.y2, addedX, tail.y2)) {
+			skSt[i].insertLine(static_cast<int>(temp.sk.size()), tail.x2, tail.y2, addedX, tail.y2);
+			return;
+		}
 			//insertHead
-			if (isIlegealAddLine(addedX, head.y1, head.x1, head.y1)) continue;
-			else {
+			if (!isIlegealAddLine(addedX, head.y1, head.x1, head.y1)) {
 				skSt[i].insertLine(0, addedX, head.y1, head.x1, head.y1);
-				return;
-			}
-			//insertTail
-			if (isIlegealAddLine(tail.x2, tail.y2, addedX, tail.y2)) continue;
-			else {
-				skSt[i].insertLine(static_cast<int>(temp.sk.size()), tail.x2, tail.y2, addedX, tail.y2);
 				return;
 			}
 	}
@@ -281,16 +287,14 @@ void SilkScreenOutput::silkCoordMaxXSafety() {
 		SilkSet temp = skSt[i];
 		Silk head = temp.sk[0];
 		Silk tail = temp.sk[temp.sk.size() - 1];
+		//insertTail
+		if (!isIlegealAddLine(tail.x2, tail.y2, addedX, tail.y2)) {
+			skSt[i].insertLine(static_cast<int>(temp.sk.size()), tail.x2, tail.y2, addedX, tail.y2);
+			return;
+		}
 			//insertHead
-			if (isIlegealAddLine(addedX, head.y1, head.x1, head.y1)) continue;
-			else {
+			if (!isIlegealAddLine(addedX, head.y1, head.x1, head.y1)) {
 				skSt[i].insertLine(0, addedX, head.y1, head.x1, head.y1);
-				return;
-			}
-			//insertTail
-			if (isIlegealAddLine(tail.x2, tail.y2, addedX, tail.y2)) continue;
-			else {
-				skSt[i].insertLine(static_cast<int>(temp.sk.size()), tail.x2, tail.y2, addedX, tail.y2);
 				return;
 			}
 	}
@@ -304,16 +308,14 @@ void SilkScreenOutput::silkCoordMinYSafety() {
 		SilkSet temp = skSt[i];
 		Silk head = temp.sk[0];
 		Silk tail = temp.sk[temp.sk.size() - 1];
+		//insertTail
+		if (!isIlegealAddLine(tail.x2, tail.y2, tail.x2, addedY)) {
+			skSt[i].insertLine(static_cast<int>(temp.sk.size()), tail.x2, tail.y2, tail.x2, addedY);
+			return;
+		}
 			//insertHead
-			if (isIlegealAddLine(head.x1, addedY, head.x1, head.y1)) continue;
-			else {
+			if (!isIlegealAddLine(head.x1, addedY, head.x1, head.y1)) {
 				skSt[i].insertLine(0, head.x1, addedY, head.x1, head.y1);
-				return;
-			}
-			//insertTail
-			if (isIlegealAddLine(tail.x2, tail.y2, tail.x2, addedY)) continue;
-			else {
-				skSt[i].insertLine(static_cast<int>(temp.sk.size()), tail.x2, tail.y2, tail.x2, addedY);
 				return;
 			}
 	}
@@ -327,15 +329,13 @@ void SilkScreenOutput::silkCoordMaxYSafety() {
 		SilkSet temp = skSt[i];
 		Silk head = temp.sk[0];
 		Silk tail = temp.sk[temp.sk.size() - 1];
-			if (isIlegealAddLine(head.x1, addedY, head.x1, head.y1)) continue;
-			else {
+		//insertTail
+		if (!isIlegealAddLine(tail.x2, tail.y2, tail.x2, addedY)) {
+			skSt[i].insertLine(static_cast<int>(temp.sk.size()), tail.x2, tail.y2, tail.x2, addedY);
+			return;
+		}
+			if (!isIlegealAddLine(head.x1, addedY, head.x1, head.y1)) {
 				skSt[i].insertLine(0, head.x1, addedY, head.x1, head.y1);
-				return;
-			}
-			//insertTail
-			if (isIlegealAddLine(tail.x2, tail.y2, tail.x2, addedY)) continue;
-			else {
-				skSt[i].insertLine(static_cast<int>(temp.sk.size()), tail.x2, tail.y2, tail.x2, addedY);
 				return;
 			}
 	}
