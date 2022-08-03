@@ -1,4 +1,4 @@
-#include "Polgyom.h"
+#include "Polygom.h"
 
 void Polygom::inputLine(double &x1, double &y1, double &x2, double &y2) {
 	shape += boost::lexical_cast<std::string>(x1) + ' ' + boost::lexical_cast<std::string>(y1) + ',' + boost::lexical_cast<std::string>(x2) + ' ' + boost::lexical_cast<std::string>(y2) + ',';

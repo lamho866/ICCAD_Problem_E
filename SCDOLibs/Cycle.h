@@ -13,7 +13,7 @@ private:
 	double dist(double x, double y);
 	bool inRange(double deg, double st, double ed);
 public: //CW or CCW 
-	const double rDegSt = 5.0;
+	const double rDegSt;
 	double x1, y1, x2, y2, rx, ry, r;
 	double stDeg, edDeg;
 	bool isCW;

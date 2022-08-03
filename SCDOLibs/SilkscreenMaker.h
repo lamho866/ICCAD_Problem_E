@@ -1,5 +1,5 @@
 #pragma once
-#include "Polgyom.h"
+#include "Polygom.h"
 #include "Common.h"
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>
@@ -30,7 +30,3 @@ void multiCropperBuffer(BoostMultiLineString multiCropperLs, const double croppe
 void connectLine(vector<BoostLineString> &bgDiff);
 
 void buildAssemblyLine(Polygom &assembly, const double assemblygap, BoostMultiLineString multiCropperLs, const double croppergap, BoostMultipolygon &cropperMulLsBuffer, vector<BoostLineString> &bgDiff);
-
-template<class T>
-typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type
-almost_equal(T x, T y);

@@ -18,7 +18,7 @@ public:
 	Silk();
 	Silk(bool _isLine, double _x1, double _y1, double _x2, double _y2, double _rx = 0.0, double _ry = 0.0, bool _isCW = false, int _cyclePtIdx = -1);
 	Silk(const Silk &sk);
-	Silk& operator=(const Silk& sk);
+	Silk& operator=(const Silk &sk);
 	
 	void write(ofstream &file);
 };
