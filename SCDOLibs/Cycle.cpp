@@ -1,7 +1,7 @@
 #include "Cycle.h"
 
 Cycle::Cycle(double _x1, double _y1, double _x2, double _y2, double _rx, double _ry, bool _isCW)
-	:x1(_x1), y1(_y1), x2(_x2), y2(_y2), rx(_rx), ry(_ry), isCW(_isCW), rDegSt(5.0) {
+	:x1(_x1), y1(_y1), x2(_x2), y2(_y2), rx(_rx), ry(_ry), isCW(_isCW), rDegSt(1.0) {
 	r = dist(x1, y1);
 	
 	stDeg = coordDeg(x1, y1);
@@ -51,12 +51,14 @@ double Cycle::coordDeg(double x, double y) {
 
 double Cycle::deg(bool isCW) {
 	if (almost_equal(x1, x2) && almost_equal(y1, y2)) return 360.0;
-
-	double curDeg = edDeg - stDeg;
-	if (curDeg < 0.0) curDeg += 360.0;
-
-	if (isCW) return curDeg;
-	return 360.0 - curDeg;
+	
+	if (isCW) {
+		if (edDeg > stDeg) return edDeg - stDeg;
+		return 360.0 - (stDeg - edDeg);
+	
+	}
+	if (stDeg > edDeg) return stDeg - edDeg;
+	return 360.0 - (edDeg - stDeg);
 }
 
 bool Cycle::almost_equal(double x, double y)

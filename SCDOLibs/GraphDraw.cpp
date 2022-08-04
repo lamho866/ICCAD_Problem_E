@@ -23,7 +23,7 @@ void checkoutPutResult(string fName, Polygom &assembly, BoostPolygon &bgAssembly
 	input.close();
 
 
-	BoostPoint pt(-1.0, 0.0);
+	BoostPoint pt(-3.0, 0.0);
 	{
 		std::ofstream svg(fName + "Check.svg");
 		boost::geometry::svg_mapper<BoostPoint> mapper(svg, 400, 400);
@@ -51,7 +51,7 @@ void checkoutPutResult(string fName, Polygom &assembly, BoostPolygon &bgAssembly
 }
 
 void resultSample(string fName, Polygom assembly, BoostPolygon &bgAssembly, BoostMultipolygon &multBGCropper, BoostMultipolygon &cropperMulLsBuffer, vector<BoostPolygon> &cycleList, vector<BoostLineString> &bgDiff, double silkscreenlen) {
-	BoostPoint pt(-0.1, 0.0);
+	BoostPoint pt(-3.0, 0.0);
 	
 	{
 		std::ofstream svg(fName + ".svg");

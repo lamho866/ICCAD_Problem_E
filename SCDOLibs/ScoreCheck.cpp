@@ -123,6 +123,8 @@ void ScoreCheck::scoreCase3() {
 	printf("%.5lf\n", score);
 	score = scoreCal(score, 0.25);
 	printf("S3 = %.5lf\n", score);
+	if (score > 0.2500) printf("illegal\n");
+	else printf("legal\n");
 }
 
 void ScoreCheck::scoreCase4() {
@@ -139,6 +141,8 @@ void ScoreCheck::scoreCase4() {
 	printf("%.5lf\n", score);
 	score = scoreCal(score, 0.25);
 	printf("S4 = %.5lf\n", score);
+	if (score > 0.2500) printf("illegal\n");
+	else printf("legal\n");
 }
 
 void ScoreCheck::readContestFile() {
