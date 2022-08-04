@@ -82,14 +82,14 @@ void SilkScreenOutput::outputSilkscreen(BoostLineString &ls, vector<Cycle> assem
 	int i = 0;
 	for (; i < ls.size() - 1; ++i) {
 		getPointData(ls[i], x, y);
-		/*
+		
 		for (int cIdx = 0; cIdx < cycleList.size(); ++cIdx) {
 			if (bg::within(ls[i], cycleList[cIdx]) && cyclePt[cIdx].degInRange(x, y)) {
 				intputCycle(cycleList[cIdx], assemblyCycleList[cIdx], ls, cIdx, i);
 				break;
 			}
 		}
-		*/
+		
 		if (i < ls.size() - 1)
 			drawLine(ls, i);
 	}
@@ -156,6 +156,7 @@ void SilkScreenOutput::ResultOutput(string fileName, Polygom &assembly, BoostMul
 	}
 	//silkScreenModify();
 	
+	/*
 	skStCoordSetUp();
 	/*
 	printf("\n----------------------\n");
@@ -166,6 +167,7 @@ void SilkScreenOutput::ResultOutput(string fileName, Polygom &assembly, BoostMul
 	printf("\n----------------------\n");
 	*/
 	
+	/*
 	silkCoordMinXSafety();
 	silkCoordMaxXSafety();
 	silkCoordMinYSafety();
@@ -173,6 +175,7 @@ void SilkScreenOutput::ResultOutput(string fileName, Polygom &assembly, BoostMul
 	
 
 	skStCoordSetUp();
+	*/
 	//dropLs();
 	write(fileName);
 }
