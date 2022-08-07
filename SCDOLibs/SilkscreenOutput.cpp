@@ -42,9 +42,12 @@ void SilkScreenOutput::intputCycle(BoostPolygon cyclePolygon, Cycle cycle, Boost
 	double x1, x2, y1, y2;
 	getPointData(ls[i], x1, y1);
 	double x = x1, y = y1;
+	double Rstd = cycle.dist(x, y);
 	while (i < ls.size() && bg::within(ls[i], cyclePolygon)) {
 		getPointData(ls[i], x, y);
 		++i;
+		double curR = cycle.dist(x, y);
+		if (!(Rstd - 0.0001 <= curR && curR <= Rstd + 0.0001)) break;
 	}
 	getPointData(ls[i - 1], x2, y2);
 	--i; // walk back the point, that can make a line, not arc
@@ -80,12 +83,14 @@ void SilkScreenOutput::outputSilkscreen(BoostLineString &ls, vector<Cycle> assem
 	skSt.push_back(SilkSet());
 	double x, y;
 	int i = 0;
+	int cIdx = 0, cSize = static_cast<int>(cyclePt.size());
 	for (; i < ls.size() - 1; ++i) {
 		getPointData(ls[i], x, y);
 		
-		for (int cIdx = 0; cIdx < cycleList.size(); ++cIdx) {
+		for (int j = 0; j < cSize; ++j, cIdx = (cIdx + 1) % cSize) {
 			if (bg::within(ls[i], cycleList[cIdx]) && cyclePt[cIdx].degInRange(x, y)) {
 				intputCycle(cycleList[cIdx], assemblyCycleList[cIdx], ls, cIdx, i);
+				cIdx = (cIdx + 1) % cSize;
 				break;
 			}
 		}
