@@ -27,6 +27,7 @@ private:
 	void cntMaxMin(double max_x, double max_y, double min_x, double min_y, int &max_x_cnt, int &max_y_cnt, int &min_x_cnt, int &min_y_cnt, SilkSet &sk);
 	void skStCoordSetUp();
 	bool isIlegealAddLine(double x1, double y1, double x2, double y2);
+	void arcCombine(SilkSet &skLs);
 	//int inCycleIdx(int i, BoostLineString &ls, double x, double y);
 	//bool isInMoreCycle(int i, BoostLineString &ls, int cIdx, double x, double y);
 public:
