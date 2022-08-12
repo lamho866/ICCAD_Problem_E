@@ -10,18 +10,25 @@ typedef bg::model::linestring<BoostPoint> BoostLineString;
 typedef bg::model::polygon<BoostPoint> BoostPolygon;
 typedef bg::model::multi_polygon<BoostPolygon> BoostMultipolygon;
 typedef bg::model::multi_linestring<BoostLineString> BoostMultiLineString;
+typedef bg::model::ring<BoostPoint> BoostRing;
 
 using namespace std;
 
-int countStartPoint(BoostLineString &ls, const double tagX, const double tagY);
+template <typename T>
+int countStartPoint(T &ls, const double tagX, const double tagY);
 
-void removeConnectPoint(BoostLineString &ls, const double tagX, const double tagY);
+template <typename T>
+void removeConnectPoint(T &ls, const double tagX, const double tagY);
+
+template <typename T>
+void modifyStartPoint(T &ls, const double tagX, const double tagY);
+
+template <typename T>
+void startPointRestruct(BoostLineString &originLs, T &ls);
 
 struct SegmentLine;
 
 void connectAB(SegmentLine &a, SegmentLine &b, double &res_x, double &res_y);
-
-void modifyStartPoint(BoostLineString &ls, const double tagX, const double tagY);
 
 void assemblyBuffer(Polygom &assembly, const double assemblygap, BoostMultiLineString &assemblyMultLine);
 

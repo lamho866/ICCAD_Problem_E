@@ -1,7 +1,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include "SCDOLibs/Common.h"
 #include "SCDOLibs/Cycle.h"
-#include "SCDOLibs/Polgyom.h"
+#include "SCDOLibs/Polygom.h"
 #include "SCDOLibs/SilkscreenMaker.h"
 #include "SCDOLibs/SilkscreenOutput.h"
 #include "SCDOLibs/GraphDraw.h"
@@ -92,7 +92,7 @@ int main()
 	buildAssemblyLine(assembly, assemblygap, multiCropperLs, croppergap, cropperMulLsBuffer, bgDiff);
 
 	assembly.cyclePtCombe();
-	SilkScreenOutput silkScreenOutput(silkscreenlen, assemblygap, bgAssembly, assembly.cyclePt, assemblyLs, cropperMulLsBuffer);
+	SilkScreenOutput silkScreenOutput(silkscreenlen, assemblygap, bgAssembly, assembly.cyclePt, assemblyLs, cropperMulLsBuffer, multBGCropper);
 	silkScreenOutput.ResultOutput(rFile, assembly, multBGCropper, bgDiff);
 
 
