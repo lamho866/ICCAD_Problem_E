@@ -1,5 +1,4 @@
 #include "SilkscreenMaker.h"
-#include "Common.h"
 
 const int points_per_circle = 36;
 boost::geometry::strategy::buffer::join_miter join_strategy;
@@ -7,7 +6,8 @@ boost::geometry::strategy::buffer::end_flat end_strategy;
 boost::geometry::strategy::buffer::side_straight side_strategy;
 boost::geometry::strategy::buffer::point_circle point_strategy;
 
-int countStartPoint(BoostLineString &ls, const double tagX, const double tagY) {
+template <typename T>
+int countStartPoint(T &ls, const double tagX, const double tagY) {
 	int cnt = 0;
 	for (int i = 0; i < ls.size(); ++i) {
 		double x, y;
@@ -18,7 +18,8 @@ int countStartPoint(BoostLineString &ls, const double tagX, const double tagY) {
 	return cnt;
 }
 
-void removeConnectPoint(BoostLineString &ls, const double tagX, const double tagY) {
+template <typename T>
+void removeConnectPoint(T &ls, const double tagX, const double tagY) {
 	for (int i = 0; i < ls.size(); ++i) {
 		double x, y;
 		getPointData(ls[i], x, y);
@@ -52,7 +53,8 @@ void connectAB(SegmentLine &a, SegmentLine &b, double &res_x, double &res_y) {
 	res_y = Dy / D;
 }
 
-void modifyStartPoint(BoostLineString &ls, const double tagX, const double tagY) {
+template <typename T>
+void modifyStartPoint(T &ls, const double tagX, const double tagY) {
 	int lsSize = ls.size();
 	for (int i = 0; i < lsSize; ++i) {
 		double x, y;
@@ -76,8 +78,20 @@ void modifyStartPoint(BoostLineString &ls, const double tagX, const double tagY)
 	}
 }
 
+template <typename T>
+void startPointRestruct(BoostLineString &originLs, T &ls){
+	double tagX, tagY;
+	getPointData(originLs[0], tagX, tagY);
+
+	int startPtCnt = countStartPoint<T>(ls, tagX, tagY);
+	while (startPtCnt > 1)
+		removeConnectPoint<T>(ls, tagX, tagY), startPtCnt--;
+
+	modifyStartPoint<T>(ls, tagX, tagY);
+}
+
 void assemblyBuffer(Polygom &assembly, const double assemblygap, BoostMultiLineString &assemblyMultLine) {
-	BoostLineString assemblyLs;
+	BoostLineString assemblyLs, resultLs;
 	makeLine(assembly, assemblyLs);
 	double tagX, tagY;
 	getPointData(assemblyLs[0], tagX, tagY);
@@ -90,21 +104,25 @@ void assemblyBuffer(Polygom &assembly, const double assemblygap, BoostMultiLineS
 	assert(assemblyOutLs.size() == 1);
 	string strLs = boost::lexical_cast<std::string>(bg::wkt(assemblyOutLs.front()));
 	string outLineStrLs = strLs.substr(9, strLs.find("),(") - 9);
-	bg::read_wkt("LINESTRING(" + outLineStrLs + ")", assemblyLs);
 
-	int startPtCnt = countStartPoint(assemblyLs, tagX, tagY);
-	while (startPtCnt > 1)
-		removeConnectPoint(assemblyLs, tagX, tagY), startPtCnt--;
+	bg::read_wkt("LINESTRING(" + outLineStrLs + ")", resultLs);
 
-	modifyStartPoint(assemblyLs, tagX, tagY);
-	assemblyMultLine.push_back(assemblyLs);
+	startPointRestruct<BoostLineString>(assemblyLs, resultLs);
+	assemblyMultLine.push_back(resultLs);
 }
 
 void multiCropperBuffer(BoostMultiLineString multiCropperLs, const double croppergap, BoostMultipolygon &cropperMulLsBuffer) {
-	BoostMultiLineString cropperMultLine;
-	BoostLineString cropperLs;
+
 	bg::strategy::buffer::distance_symmetric<double> cropper_dist_strategy(croppergap);
-	boost::geometry::buffer(multiCropperLs, cropperMulLsBuffer, cropper_dist_strategy, side_strategy, join_strategy, end_strategy, point_strategy);
+	
+	for (int i = 0; i < multiCropperLs.size(); ++i) {
+		BoostMultipolygon tempBuffered;
+		bg::buffer(multiCropperLs[i], tempBuffered, cropper_dist_strategy, side_strategy, join_strategy, end_strategy, point_strategy);
+
+		startPointRestruct<BoostRing>(multiCropperLs[i], tempBuffered[0].outer());
+		cropperMulLsBuffer.push_back(tempBuffered[0]);
+	}
+
 }
 
 void connectLine(vector<BoostLineString> &bgDiff) {
