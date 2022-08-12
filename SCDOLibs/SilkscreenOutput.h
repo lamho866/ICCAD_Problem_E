@@ -2,6 +2,9 @@
 #include "Cycle.h"
 #include "Common.h"
 #include "SilkSet.h"
+#include "SilkscreenOutput/DropLs.h"
+#include "SilkscreenOutput/OutputSilkscreen.h"
+
 #include "cmath"
 #include <vector>
 #include <fstream>
@@ -23,11 +26,8 @@ private:
 	void arcLineCheck(SilkSet &sk);
 	void addTurningPoint(int &i, SilkSet &skSet, bool isHeaed);
 	void addArcSafetyLine(int &i, SilkSet &skSet);
-	void isCoordEquals(double max_cr, double cur_max, int &cnt);
-	void cntMaxMin(double max_x, double max_y, double min_x, double min_y, int &max_x_cnt, int &max_y_cnt, int &min_x_cnt, int &min_y_cnt, SilkSet &sk);
 	void skStCoordSetUp();
 	bool isIlegealAddLine(double x1, double y1, double x2, double y2);
-	void arcCombine(SilkSet &skLs);
 	//int inCycleIdx(int i, BoostLineString &ls, double x, double y);
 	//bool isInMoreCycle(int i, BoostLineString &ls, int cIdx, double x, double y);
 public:
@@ -45,23 +45,11 @@ public:
 
 	void makeCycleEachPoint(vector<Cycle> &cyclePt, const double assemblyGap, vector<BoostPolygon> &cycleList);
 
-	void intputCycle(BoostPolygon cyclePolygon, Cycle cycle, BoostLineString &ls, int cIdx, int &i);
-
-	bool collinear(BoostPoint pt1, BoostPoint pt2, BoostPoint pt3);
-
-	void drawLine(BoostLineString &ls, int &i);
-
-	void outputSilkscreen(BoostLineString &ls, vector<Cycle> assemblyCycleList);
-
 	void ResultOutput(string fileName, Polygom &assembly, BoostMultipolygon &multBGCropper, vector<BoostLineString> &bgDiff);
 
-	void dropLs();
+	void skStCoordSafety();
 
-	void silkCoordMaxXSafety();
+	void addCoordSafety_Y(double addedY);
 
-	void silkCoordMaxYSafety();
-
-	void silkCoordMinXSafety();
-
-	void silkCoordMinYSafety();
+	void addCoordSafety_X(double addedX);
 };
