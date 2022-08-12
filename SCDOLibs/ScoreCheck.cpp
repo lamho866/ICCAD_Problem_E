@@ -99,7 +99,7 @@ void ScoreCheck::scoreCase2(BoostLineString &assemblyLs) {
 		printf("S2 = 0.2500\n");
 }
 
-double ScoreCheck::avgCropperDistance(vector<BoostLineString> &resultLs, BoostMultipolygon &multBGCropper) {
+double ScoreCheck::avgCropperDistance(vector<BoostLineString> &resultLs, BoostMultipolygon &multBGCropper, vector<int> &illegalIdx, vector<double> &illDist, bool &isLegal) {
 	double tCropper = 0.0;
 	for (int i = 0; i < resultLs.size(); ++i) {
 		double curMin = 999999.0;
@@ -109,13 +109,22 @@ double ScoreCheck::avgCropperDistance(vector<BoostLineString> &resultLs, BoostMu
 			curMin = min(curMin, dist);
 		}
 		tCropper += curMin;
+		if (curMin < croppergap) {
+			isLegal = false;
+			illegalIdx.push_back(i);
+			illDist.push_back(curMin);
+		}
 	}
 	tCropper /= static_cast<double>(resultLs.size());
 	return tCropper;
 }
 
 void ScoreCheck::scoreCase3() {
-	double tCropper = avgCropperDistance(resultLs, multBGCropper);
+	vector<int> illegalIdx;
+	vector<double> illDist;
+	bool isLegal = true;
+	
+	double tCropper = avgCropperDistance(resultLs, multBGCropper, illegalIdx, illDist, isLegal);
 	double score = 1 - (tCropper - croppergap) * 10 / croppergap;
 	printf("-----------------------------------------\n");
 	printf("Cropper far\n");
@@ -123,15 +132,28 @@ void ScoreCheck::scoreCase3() {
 	printf("%.5lf\n", score);
 	score = scoreCal(score, 0.25);
 	printf("S3 = %.5lf\n", score);
-	if (score > 0.2500) printf("illegal\n");
-	else printf("legal\n");
+	if (isLegal) printf("legal\n");
+	else {
+		printf("illegal\n");
+		for (int i = 0; i < illegalIdx.size(); ++i)
+			printf("silkScreen[%d] : %lf\n", illegalIdx[i], illDist[i]);
+	}
 }
 
 void ScoreCheck::scoreCase4() {
+	vector<int> illegalIdx;
+	vector<double> illDist;
+	bool isLegal = true;
+
 	double tOutline = 0.0;
 	for (int i = 0; i < resultLs.size(); ++i) {
 		double dist = bg::distance(bgAssembly, resultLs[i]);
 		tOutline += dist;
+		if (dist < assemblygap) {
+			isLegal = false;
+			illegalIdx.push_back(i);
+			illDist.push_back(dist);
+		}
 	}
 	tOutline /= static_cast<double>(resultLs.size());
 	double score = 1 - (tOutline - assemblygap) * 10 / assemblygap;
@@ -141,8 +163,13 @@ void ScoreCheck::scoreCase4() {
 	printf("%.5lf\n", score);
 	score = scoreCal(score, 0.25);
 	printf("S4 = %.5lf\n", score);
-	if (score > 0.2500) printf("illegal\n");
-	else printf("legal\n");
+
+	if (isLegal) printf("legal\n");
+	else {
+		printf("illegal\n");
+		for (int i = 0; i < illegalIdx.size(); ++i)
+			printf("silkScreen[%d] : %lf\n", illegalIdx[i], illDist[i]);
+	}
 }
 
 void ScoreCheck::readContestFile() {

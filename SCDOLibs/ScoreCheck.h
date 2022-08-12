@@ -37,7 +37,7 @@ private:
 	double assemblygap, croppergap, silkscreenlen;
 
 	double scoreCal(double score, double percent);
-	double avgCropperDistance(vector<BoostLineString> &resultLs, BoostMultipolygon &multBGCropper);
+	double avgCropperDistance(vector<BoostLineString> &resultLs, BoostMultipolygon &multBGCropper, vector<int> &illegalIdx, vector<double> &illDist, bool &isLegal);
 	double score_assemblyAreaBuffer();
 	void readLineData(string s, double &x1, double &y1, double &x2, double &y2);
 
