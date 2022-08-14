@@ -29,24 +29,13 @@ double Cycle::dist(double x, double y) {
 
 double Cycle::coordDeg(double x, double y) {
 	x -= rx, y -= ry;
-
-	double curDeg = 0.0;
-	//if can more or equal 1 deg
-	//value range[-1, 1]
-	double params = y / r;
-	if (params > 1.0) params = 1.0;
-	if (params < -1.0) params = -1.0;
-
-	curDeg = asin(params) * 180.0 / PI;
-	//sin have 1 and -1
-	//if -1 => will add the deg
-	curDeg = 90.0 - curDeg;
-	if ((curDeg + 0.0) == 0.0) curDeg = 0.0;
-
-	if (x < 0.0) curDeg = 360.0 - curDeg;
-	if (curDeg >= 360.0) curDeg -= 360.0; //360.0 == 0;
-	//if (almost_equal(curDeg, 0.0)) curDeg = 0.0;//avoid negZero, -0.0
-	return curDeg;
+	//OA (0.0, r), OB(x, y)
+	double dotProduct = y * r;
+	double angle = dotProduct / (r * dist(x + rx, y + ry));
+	angle = acos(angle) * 180.0 / PI;
+	
+	if (x < 0.0) return 360.0 - angle;
+	return angle;
 }
 
 double Cycle::deg(bool isCW) {
