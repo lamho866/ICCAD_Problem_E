@@ -90,3 +90,10 @@ void Cycle::drawArcycle(const double stX, const double stY, const double endX, c
 	}
 	shape += boost::lexical_cast<std::string>(endX) + ' ' + boost::lexical_cast<std::string>(endY) + ',';
 }
+
+void Cycle::translatePt(double targetR, double &x, double &y) {
+	double curR = dist(x, y);
+	double unitVx = (x - rx) / curR, unitVy = (y - ry) / curR;
+	x = unitVx * targetR + rx;
+	y = unitVy * targetR + ry;
+}

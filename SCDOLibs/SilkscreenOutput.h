@@ -2,6 +2,7 @@
 #include "Cycle.h"
 #include "Common.h"
 #include "SilkSet.h"
+#include "Polygom.h"
 #include "SilkscreenOutput/DropLs.h"
 #include "SilkscreenOutput/OutputSilkscreen.h"
 

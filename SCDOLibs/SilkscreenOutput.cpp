@@ -94,7 +94,7 @@ void SilkScreenOutput::silkScreenModify() {
 void SilkScreenOutput::ResultOutput(string fileName, Polygom &assembly, BoostMultipolygon &multBGCropper, vector<BoostLineString> &bgDiff) {
 	for (int i = 0; i < bgDiff.size(); ++i) {
 		if (bg::within(bgDiff[i], multBGCropper) == false && isLargerEnough(bgDiff[i], silkscreenlen)) {
-			outputSilkscreen(skSt, bgDiff[i], assembly.cyclePt, cyclePt, cycleList);
+			outputSilkscreen(skSt, bgDiff[i], assembly.cyclePt, cyclePt, cycleList, assemblygap);
 		}
 	}
 	//silkScreenModify();

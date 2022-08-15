@@ -1,6 +1,6 @@
 #include "OutputSilkscreen.h"
 
-void outputSilkscreen(vector<SilkSet> &skSt, BoostLineString &ls, vector<Cycle> assemblyCycleList, vector<Cycle> &cyclePt, vector<BoostPolygon> &cycleList) {
+void outputSilkscreen(vector<SilkSet> &skSt, BoostLineString &ls, vector<Cycle> assemblyCycleList, vector<Cycle> &cyclePt, vector<BoostPolygon> &cycleList, double assemblygap) {
 	SilkSet sk;
 	double x, y, nxtX, nxtY;
 	int i = 0;
@@ -11,9 +11,12 @@ void outputSilkscreen(vector<SilkSet> &skSt, BoostLineString &ls, vector<Cycle> 
 		getPointData(ls[i + 1], nxtX, nxtY);
 		bool inCycle = false;
 		for (int j = 0; j < cSize; ++j, cIdx = (cIdx + 1) % cSize) {
+			//printf("cIdx: %d\n", cIdx);
+			//printf("sk[%d] : (%.4lf, %.4lf) deg: %.5lf inRage: %d, withIn: %d\n", i, x, y, cyclePt[cIdx].coordDeg(x, y), cyclePt[cIdx].degInRange(x, y), bg::within(ls[i], cycleList[cIdx]));
+			//printf("sk[%d] : (%.4lf, %.4lf) deg: %.5lf inRage: %d, withIn: %d\n\n", i + 1, nxtX, nxtY, cyclePt[cIdx].coordDeg(nxtX, nxtY), cyclePt[cIdx].degInRange(nxtX, nxtY), bg::within(ls[i + 1], cycleList[cIdx]));
 			if (bg::within(ls[i], cycleList[cIdx]) && cyclePt[cIdx].degInRange(x, y) &&
 				bg::within(ls[i + 1], cycleList[cIdx]) && cyclePt[cIdx].degInRange(nxtX, nxtY)) {
-				intputCycle(cycleList[cIdx], assemblyCycleList[cIdx], ls, cIdx, i, sk);
+				intputCycle(cycleList[cIdx], assemblyCycleList[cIdx], ls, cIdx, i, sk, assemblygap);
 				cIdx = (cIdx + 1) % cSize;
 				inCycle = true;
 				--i;
@@ -29,11 +32,65 @@ void outputSilkscreen(vector<SilkSet> &skSt, BoostLineString &ls, vector<Cycle> 
 	skSt.push_back(sk);
 }
 
-void intputCycle(BoostPolygon cyclePolygon, Cycle cycle, BoostLineString &ls, int cIdx, int &i, SilkSet &sk) {
+void safetyCyclePt(Cycle cycle, double assemblygap, double &x, double &y) {
+	cycle.translatePt(assemblygap, x, y);
+}
+
+void cHeadCheck(Cycle &c, SilkSet &sk, double assGap, double &x, double &y) {
+	if (c.isCW) {
+		if (c.dist(x, y) - c.r < assGap) {
+			//printf("ft-head (%.4lf, %.4lf), coordDeg: %lf, r:%lf\n", x, y, c.coordDeg(x, y), c.dist(x, y));
+			safetyCyclePt(c, assGap + c.r, x, y);
+			//way - 1
+			//sk.addLine(x, y, x1, y1);
+			//way - 2
+			sk.sk[sk.sk.size() - 1].x2 = x;
+			sk.sk[sk.sk.size() - 1].y2 = y;
+			//printf("af-head (%.4lf, %.4lf), coordDeg: %lf, r:%lf\n\n", x, y, c.coordDeg(x, y), c.dist(x, y));
+		}
+		return;
+	}
+
+	if (c.r - c.dist(x, y) < assGap) {
+		//printf("ft-head (%.4lf, %.4lf), coordDeg: %lf, r:%lf\n", x, y, c.coordDeg(x, y), c.dist(x, y));
+		safetyCyclePt(c, c.r - assGap, x, y);
+		//way - 1
+		//sk.addLine(x, y, x1, y1);
+		//way - 2
+		sk.sk[sk.sk.size() - 1].x2 = x;
+		sk.sk[sk.sk.size() - 1].y2 = y;
+		//printf("af-head (%.4lf, %.4lf), coordDeg: %lf, r:%lf\n\n", x, y, c.coordDeg(x, y), c.dist(x, y));
+	}
+}
+
+void cTailCheck(Cycle &c, BoostLineString &ls, int &i, double assGap, double &x, double &y) {
+	if (c.isCW) {
+		if (c.dist(x, y) - c.r < assGap) {
+			//printf("ft-tail (%.4lf, %.4lf), coordDeg: %lf, r:%lf\n", x, y, c.coordDeg(x, y), c.dist(x, y));
+			safetyCyclePt(c, assGap + c.r, x, y);
+			ls[i].set<0>(x);
+			ls[i].set<1>(y);
+			//printf("af-tail (%.4lf, %.4lf), coordDeg: %lf, r:%lf\n\n", x, y, c.coordDeg(x, y), c.dist(x, y));
+		}
+		return;
+	}
+	if (c.r - c.dist(x, y) < assGap){
+		//printf("ft-tail (%.4lf, %.4lf), coordDeg: %lf, r:%lf\n", x, y, c.coordDeg(x, y), c.dist(x, y));
+		safetyCyclePt(c, c.r - assGap, x, y);
+		ls[i].set<0>(x);
+		ls[i].set<1>(y);
+		//printf("af-tail (%.4lf, %.4lf), coordDeg: %lf, r:%lf\n\n", x, y, c.coordDeg(x, y), c.dist(x, y));
+	}
+}
+
+
+void intputCycle(BoostPolygon cyclePolygon, Cycle cycle, BoostLineString &ls, int cIdx, int &i, SilkSet &sk, double assemblygap) {
 	double x1, x2, y1, y2;
 	getPointData(ls[i], x1, y1);
 	double x = x1, y = y1;
 	double Rstd = cycle.dist(x, y);
+	
+	cHeadCheck(cycle, sk, assemblygap, x1, y1);
 	while (i < ls.size() && bg::within(ls[i], cyclePolygon)) {
 		getPointData(ls[i], x, y);
 		++i;
@@ -42,6 +99,11 @@ void intputCycle(BoostPolygon cyclePolygon, Cycle cycle, BoostLineString &ls, in
 	}
 	getPointData(ls[i - 1], x2, y2);
 	--i; // walk back the point, that can make a line, not arc
+	
+
+	cTailCheck(cycle, ls, i, assemblygap, x2, y2);
+	printf("stR: %lf, edR: %lf\n", cycle.dist(x1, y1), cycle.dist(x2, y2));
+	printf("addCircle(%lf, %lf, %lf, %lf, %lf, %lf, %d, %d)\n\n", x1, y1, x2, y2, cycle.rx, cycle.ry, cycle.isCW, cIdx);
 	sk.addCircle(x1, y1, x2, y2, cycle.rx, cycle.ry, cycle.isCW, cIdx);
 }
 
