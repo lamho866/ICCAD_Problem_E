@@ -106,14 +106,13 @@ int main()
 	//ScoreCheck
 	ScoreCheck scoreCheck(pFile, rFile);
 	scoreCheck.showScoreResult();
-
+	/*
 	printf("\n\n");
 	for (int i = 0; i < assembly.cyclePt.size(); ++i) {
 		Cycle &tempC = assembly.cyclePt[i];
 		printf("c(%.4lf, %.4lf), stDeg: %.4lf, edDeg: %.4lf\n", tempC.rx, tempC.ry, tempC.stDeg, tempC.edDeg);
 	}
-	
-
+	*/
 	
 	system("pause");
 }

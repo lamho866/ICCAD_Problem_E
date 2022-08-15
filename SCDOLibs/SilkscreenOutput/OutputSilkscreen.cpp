@@ -102,8 +102,8 @@ void intputCycle(BoostPolygon cyclePolygon, Cycle cycle, BoostLineString &ls, in
 	
 
 	cTailCheck(cycle, ls, i, assemblygap, x2, y2);
-	printf("stR: %lf, edR: %lf\n", cycle.dist(x1, y1), cycle.dist(x2, y2));
-	printf("addCircle(%lf, %lf, %lf, %lf, %lf, %lf, %d, %d)\n\n", x1, y1, x2, y2, cycle.rx, cycle.ry, cycle.isCW, cIdx);
+	//printf("stR: %lf, edR: %lf\n", cycle.dist(x1, y1), cycle.dist(x2, y2));
+	//printf("addCircle(%lf, %lf, %lf, %lf, %lf, %lf, %d, %d)\n\n", x1, y1, x2, y2, cycle.rx, cycle.ry, cycle.isCW, cIdx);
 	sk.addCircle(x1, y1, x2, y2, cycle.rx, cycle.ry, cycle.isCW, cIdx);
 }
 
