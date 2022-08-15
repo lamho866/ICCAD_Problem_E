@@ -96,7 +96,7 @@ int main()
 
 	assembly.cyclePtCombe();
 	SilkScreenOutput silkScreenOutput(silkscreenlen, assemblygap, bgAssembly, assembly.cyclePt, assemblyLs, cropperMulLsBuffer, multBGCropper);
-	//silkScreenOutput.ResultOutput(rFile, assembly, multBGCropper, bgDiff);
+	silkScreenOutput.ResultOutput(rFile, assembly, multBGCropper, bgDiff);
 
 
 	//GraphDraw
