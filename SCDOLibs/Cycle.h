@@ -34,4 +34,6 @@ public: //CW or CCW
 	void rotationPt(double curX, double curY, double &nxtX, double &nxtY, bool isCW);
 
 	void drawArcycle(const double stX, const double stY, const double endX, const double endY, const double maxDeg, bool isCW, string &shape);
+
+	void translatePt(double targetR, double &x, double &y);
 };

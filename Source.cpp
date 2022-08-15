@@ -10,6 +10,7 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <boost/geometry.hpp>
 #include <boost/geometry/geometry.hpp>
 
 using namespace std;
@@ -27,7 +28,6 @@ int main()
 	//string pFile = "PublicCase/PublicCase_A";
 	//string rFile = "ResultPublicCase/Result_A";
 	
-
 	string pFile = "Problem";
 	string rFile = "Result";
 
@@ -53,8 +53,11 @@ int main()
 	silkscreenlen = atof(str.substr(14).c_str());
 	input >> str;
 
-	croppergap += 0.0001;
-	assemblygap += 0.0001;
+	double addGapCrop = 0.0001;
+	double addGapAss = 0.0001;
+
+	croppergap += addGapCrop;
+	assemblygap += addGapAss;
 
 	//assembly
 	while (1) {
@@ -103,9 +106,13 @@ int main()
 	//ScoreCheck
 	ScoreCheck scoreCheck(pFile, rFile);
 	scoreCheck.showScoreResult();
-
-	printf("AssemblySize: %d\n", assembly.cyclePt.size());
-
+	/*
+	printf("\n\n");
+	for (int i = 0; i < assembly.cyclePt.size(); ++i) {
+		Cycle &tempC = assembly.cyclePt[i];
+		printf("c(%.4lf, %.4lf), stDeg: %.4lf, edDeg: %.4lf\n", tempC.rx, tempC.ry, tempC.stDeg, tempC.edDeg);
+	}
+	*/
+	
 	system("pause");
 }
-
