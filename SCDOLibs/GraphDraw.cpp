@@ -45,7 +45,7 @@ void checkoutPutResult(string fName, Polygom &assembly, BoostPolygon &bgAssembly
 
 		mapper.map(bgAssembly, "fill-opacity:0.5;fill:rgb(51,153,255);stroke:rgb(0,77,153);stroke-width:1");
 		mapper.map(multBGCropper, "fill-opacity:0.5;fill:rgb(204,153,0);stroke:rgb(202,153,0);stroke-width:1");
-		mapper.map(cropperMulLsBuffer, "fill-opacity:0.5;fill:rgb(255, 255, 153);stroke:rgb(77, 77, 0);stroke-width:1");
+		//mapper.map(cropperMulLsBuffer, "fill-opacity:0.5;fill:rgb(255, 255, 153);stroke:rgb(77, 77, 0);stroke-width:1");
 		mapper.map(pt, "fill-opacity:0.5;fill:rgb(0,0,0);stroke:rgb(0,0,0);stroke-width:1");
 	}
 }

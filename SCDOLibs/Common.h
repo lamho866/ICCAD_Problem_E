@@ -11,6 +11,11 @@ typedef bg::model::multi_linestring<BoostLineString> BoostMultiLineString;
 
 using namespace std;
 
+struct Pt {
+	double x, y;
+	Pt(double _x, double _y) : x(_x), y(_y) {};
+};
+
 void getPointData(BoostPoint pt, double &x, double &y);
 
 void makeThePolygonShape(Polygom &polyShape, BoostPolygon &bgPlogom);

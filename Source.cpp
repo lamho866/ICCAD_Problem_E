@@ -34,6 +34,7 @@ int main()
 	Polygom assembly;
 	BoostPolygon bgAssembly;
 	BoostLineString assemblyLs;
+	BoostMultipolygon assBuffer;
 
 	vector<Polygom> cropperList;
 	BoostMultipolygon multBGCropper;
@@ -92,10 +93,10 @@ int main()
 
 	vector<BoostLineString> bgDiff;
 	BoostMultipolygon cropperMulLsBuffer;
-	buildAssemblyLine(assembly, assemblygap, multiCropperLs, croppergap, cropperMulLsBuffer, bgDiff);
+	buildAssemblyLine(assembly, assemblygap, multiCropperLs, croppergap, cropperMulLsBuffer, assBuffer, bgDiff);
 
 	assembly.cyclePtCombe();
-	SilkScreenOutput silkScreenOutput(silkscreenlen, assemblygap, bgAssembly, assembly.cyclePt, assemblyLs, cropperMulLsBuffer, multBGCropper);
+	SilkScreenOutput silkScreenOutput(silkscreenlen, assemblygap, bgAssembly, assembly.cyclePt, assemblyLs, assBuffer, cropperMulLsBuffer, multBGCropper);
 	silkScreenOutput.ResultOutput(rFile, assembly, multBGCropper, bgDiff);
 
 
@@ -106,6 +107,7 @@ int main()
 	//ScoreCheck
 	ScoreCheck scoreCheck(pFile, rFile);
 	scoreCheck.showScoreResult();
+
 	/*
 	printf("\n\n");
 	for (int i = 0; i < assembly.cyclePt.size(); ++i) {
@@ -113,6 +115,8 @@ int main()
 		printf("c(%.4lf, %.4lf), stDeg: %.4lf, edDeg: %.4lf\n", tempC.rx, tempC.ry, tempC.stDeg, tempC.edDeg);
 	}
 	*/
+	
+
 	
 	system("pause");
 }

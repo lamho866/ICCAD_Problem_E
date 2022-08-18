@@ -30,10 +30,10 @@ struct SegmentLine;
 
 void connectAB(SegmentLine &a, SegmentLine &b, double &res_x, double &res_y);
 
-void assemblyBuffer(Polygom &assembly, const double assemblygap, BoostMultiLineString &assemblyMultLine);
+void assemblyBuffer(Polygom &assembly, const double assemblygap, BoostMultiLineString &assemblyMultLine, BoostMultipolygon &assBuffer);
 
 void multiCropperBuffer(BoostMultiLineString multiCropperLs, const double croppergap, BoostMultipolygon &cropperMulLsBuffer);
 
 void connectLine(vector<BoostLineString> &bgDiff);
 
-void buildAssemblyLine(Polygom &assembly, const double assemblygap, BoostMultiLineString multiCropperLs, const double croppergap, BoostMultipolygon &cropperMulLsBuffer, vector<BoostLineString> &bgDiff);
+void buildAssemblyLine(Polygom &assembly, const double assemblygap, BoostMultiLineString multiCropperLs, const double croppergap, BoostMultipolygon &cropperMulLsBuffer, BoostMultipolygon &assBuffer, vector<BoostLineString> &bgDiff);

@@ -90,19 +90,18 @@ void startPointRestruct(BoostLineString &originLs, T &ls){
 	modifyStartPoint<T>(ls, tagX, tagY);
 }
 
-void assemblyBuffer(Polygom &assembly, const double assemblygap, BoostMultiLineString &assemblyMultLine) {
+void assemblyBuffer(Polygom &assembly, const double assemblygap, BoostMultiLineString &assemblyMultLine, BoostMultipolygon &assBuffer) {
 	BoostLineString assemblyLs, resultLs;
 	makeLine(assembly, assemblyLs);
 	double tagX, tagY;
 	getPointData(assemblyLs[0], tagX, tagY);
 
 	//make the outline
-	BoostMultipolygon assemblyOutLs;
 	bg::strategy::buffer::distance_symmetric<double> assemblygap_dist_strategy(assemblygap);
-	boost::geometry::buffer(assemblyLs, assemblyOutLs, assemblygap_dist_strategy, side_strategy, join_strategy, end_strategy, point_strategy);
+	boost::geometry::buffer(assemblyLs, assBuffer, assemblygap_dist_strategy, side_strategy, join_strategy, end_strategy, point_strategy);
 
-	assert(assemblyOutLs.size() == 1);
-	string strLs = boost::lexical_cast<std::string>(bg::wkt(assemblyOutLs.front()));
+	assert(assBuffer.size() == 1);
+	string strLs = boost::lexical_cast<std::string>(bg::wkt(assBuffer.front()));
 	string outLineStrLs = strLs.substr(9, strLs.find("),(") - 9);
 
 	bg::read_wkt("LINESTRING(" + outLineStrLs + ")", resultLs);
@@ -141,9 +140,9 @@ void connectLine(vector<BoostLineString> &bgDiff) {
 	}
 }
 
-void buildAssemblyLine(Polygom &assembly, const double assemblygap, BoostMultiLineString multiCropperLs, const double croppergap, BoostMultipolygon &cropperMulLsBuffer, vector<BoostLineString> &bgDiff) {
+void buildAssemblyLine(Polygom &assembly, const double assemblygap, BoostMultiLineString multiCropperLs, const double croppergap, BoostMultipolygon &cropperMulLsBuffer, BoostMultipolygon &assBuffer, vector<BoostLineString> &bgDiff) {
 	BoostMultiLineString assemblyMultLine;
-	assemblyBuffer(assembly, assemblygap, assemblyMultLine);
+	assemblyBuffer(assembly, assemblygap, assemblyMultLine, assBuffer);
 	multiCropperBuffer(multiCropperLs, croppergap, cropperMulLsBuffer);
 
 	//difference

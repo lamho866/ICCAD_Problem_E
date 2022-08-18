@@ -1,7 +1,7 @@
 #include "SilkscreenOutput.h"
 
-SilkScreenOutput::SilkScreenOutput(double _silkscreenlen, double _assemblygap, BoostPolygon &bgAssembly, vector<Cycle> &cyclePoint, BoostLineString assemblyLs, BoostMultipolygon &cropperMulLsBuffer, BoostMultipolygon &multBGCropper) :
-	silkscreenlen(_silkscreenlen), assemblygap(_assemblygap), bgAssemblyRef(bgAssembly), cyclePt(cyclePoint), cropperMulLsBufferRef(cropperMulLsBuffer), multBGCropperRef(multBGCropper){
+SilkScreenOutput::SilkScreenOutput(double _silkscreenlen, double _assemblygap, BoostPolygon &bgAssembly, vector<Cycle> &cyclePoint, BoostLineString assemblyLs, BoostMultipolygon &_assBuffer, BoostMultipolygon &cropperMulLsBuffer, BoostMultipolygon &multBGCropper) :
+	silkscreenlen(_silkscreenlen), assemblygap(_assemblygap), bgAssemblyRef(bgAssembly), cyclePt(cyclePoint), assBuffer(_assBuffer), cropperMulLsBufferRef(cropperMulLsBuffer), multBGCropperRef(multBGCropper){
 	findCoordMaxMin(assemblyLs, as_max_x, as_max_y, as_min_x, as_min_y);
 	makeCycleEachPoint(cyclePt, assemblygap, cycleList);
 }
@@ -125,9 +125,7 @@ void SilkScreenOutput::skStCoordSetUp() {
 
 bool SilkScreenOutput::isIlegealAddLine(double x1, double y1, double x2, double y2) {
 	Polygom addLsPoly;
-	BoostLineString addLs;
-	addLsPoly.inputLine(x1, y1, x2, y2);
-	makeLine(addLsPoly, addLs);
+	BoostLineString addLs{{ x1, y1 }, { x2, y2 }};
 	//touches: Checks if two geometries have at least one touching point (tangent - non overlapping)
 	//intersects: Checks if two geometries have at least one intersection.
 	if (bg::intersects(addLs, bgAssemblyRef) || bg::intersects(addLs, multBGCropperRef)) return true;
@@ -155,16 +153,16 @@ void SilkScreenOutput::skStCoordSafety() {
 	
 	if (skSt_min_y > as_min_y) {
 		sort(skSt.begin(), skSt.end(), minYCmp);
-		addCoordSafety_Y(as_min_y - 0.0001);
+		addCoordSafety_Y(as_min_y - 0.0001, true);
 	}
 
 	if (skSt_max_y < as_max_y) {
 		sort(skSt.begin(), skSt.end(), maxYCmp);
-		addCoordSafety_Y(as_max_y + 0.0001);
+		addCoordSafety_Y(as_max_y + 0.0001, false);
 	}
 }
 
-void SilkScreenOutput::addCoordSafety_Y(double addedY) {
+void SilkScreenOutput::addCoordSafety_Y(double addedY, bool isLower) {
 	for (int i = 0; i < skSt.size(); ++i) {
 		SilkSet temp = skSt[i];
 		Silk head = temp.sk[0];
@@ -179,6 +177,52 @@ void SilkScreenOutput::addCoordSafety_Y(double addedY) {
 			return;
 		}
 	}
+
+	SilkSet &temp = skSt[0];
+	Silk &head = temp.sk[0];
+	Silk &tail = temp.sk[temp.sk.size() - 1];
+
+	bool isHead = (head.y1 < tail.y2 == isLower);
+	Silk &modiftPt = (isHead)? head : tail;
+
+	BoostPoint bPt1(modiftPt.x1, modiftPt.y1), bPt2(modiftPt.x2, modiftPt.y2);
+	BoostLineString addLs{ { modiftPt.x1 , modiftPt.y1}, { modiftPt.x1, addedY } };
+	
+	for (int i = 0; i < multBGCropperRef.size(); ++i) {
+		if (bg::intersects(addLs, multBGCropperRef[i])) {
+			vector<BoostLineString> cropDiff;
+			makeSafetyWithCrop(cropperMulLsBufferRef[i],  modiftPt.x1, addedY, assBuffer, cropDiff);
+
+			printf("\nCropDiffSize: %d\n", cropDiff.size());
+			printf("Crops:\n");
+
+			for (int j = 0; j < cropDiff.size(); ++j) {
+				BoostLineString &cropAddLs = cropDiff[j];
+				double cropX1, cropY1, cropX2, cropY2;
+				getPointData(cropAddLs[0], cropX1, cropY1);
+				getPointData(cropAddLs[cropAddLs.size() - 1], cropX2, cropY2);
+				if ( almost_equal(cropX1, modiftPt.x1) && almost_equal(cropY1, modiftPt.y1) ||
+					almost_equal(cropX1, modiftPt.x2) && almost_equal(cropY1, modiftPt.y2) ||
+					almost_equal(cropX2, modiftPt.x1) && almost_equal(cropY2, modiftPt.y1) ||
+					almost_equal(cropX2, modiftPt.x2) && almost_equal(cropY2, modiftPt.y2)
+				) {
+					printf("%s\n", boost::lexical_cast<std::string>(bg::wkt(cropDiff[j])).c_str());
+					SilkSet sk;
+					for (int k = 0; k < cropAddLs.size() - 1; ++k) {
+						drawLine(cropAddLs, k, sk);
+					}
+					printf("sk[%d]:\n", j);
+					for (int k = 0; k < sk.sk.size(); ++k)
+						printf("(%lf, %lf, %lf, %lf)\n", sk.sk[k].x1, sk.sk[k].y1, sk.sk[k].x2, sk.sk[k].y2);
+					skSt.push_back(sk);
+				return;
+				
+				}
+			}
+			return;
+		}
+	}
+	
 }
 
 void SilkScreenOutput::addCoordSafety_X(double addedX) {

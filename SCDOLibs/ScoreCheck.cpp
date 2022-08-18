@@ -311,7 +311,8 @@ void ScoreCheck::showScoreResult() {
 	//printf("readResultFile Done\n");
 
 	BoostMultiLineString assemblyMultLine;
-	assemblyBuffer(assembly, assemblygap, assemblyMultLine);
+	BoostMultipolygon assBuffer;
+	assemblyBuffer(assembly, assemblygap, assemblyMultLine, assBuffer);
 
 	lineConnectTest();
 	silkScreenLenTest();
