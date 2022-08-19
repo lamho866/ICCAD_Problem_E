@@ -5,6 +5,7 @@
 #include "Polygom.h"
 #include "SilkscreenOutput/DropLs.h"
 #include "SilkscreenOutput/OutputSilkscreen.h"
+#include "SilkscreenOutput/SafetyWithCrop.h"
 
 #include "cmath"
 #include <vector>
@@ -50,7 +51,9 @@ public:
 
 	void skStCoordSafety();
 
-	void addCoordSafety_Y(double addedY);
+	void addCoordSafety_Y(double addedY, bool isLower);
 
-	void addCoordSafety_X(double addedX);
+	void addCoordSafety_X(double addedX, bool isLower);
+
+	void addCoordSafetyLine(BoostLineString &addLs, vector<BoostLineString> &cropDiff);
 };

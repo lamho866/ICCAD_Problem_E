@@ -36,7 +36,8 @@ void safetyCyclePt(Cycle cycle, double assemblygap, double &x, double &y) {
 	cycle.translatePt(assemblygap, x, y);
 }
 
-void cHeadCheck(Cycle &c, SilkSet &sk, double assGap, double &x, double &y) {
+void cHeadCheck(Cycle &c, SilkSet &sk, double assGap, double x, double y) {
+	if (sk.sk.size() == 0.0) return;
 	if (c.isCW) {
 		if (c.dist(x, y) - c.r < assGap) {
 			//printf("ft-head (%.4lf, %.4lf), coordDeg: %lf, r:%lf\n", x, y, c.coordDeg(x, y), c.dist(x, y));
@@ -52,7 +53,7 @@ void cHeadCheck(Cycle &c, SilkSet &sk, double assGap, double &x, double &y) {
 	}
 
 	if (c.r - c.dist(x, y) < assGap) {
-		//printf("ft-head (%.4lf, %.4lf), coordDeg: %lf, r:%lf\n", x, y, c.coordDeg(x, y), c.dist(x, y));
+		printf("ft-head (%.4lf, %.4lf), coordDeg: %lf, r:%lf\n", x, y, c.coordDeg(x, y), c.dist(x, y));
 		safetyCyclePt(c, c.r - assGap, x, y);
 		//way - 1
 		//sk.addLine(x, y, x1, y1);
@@ -63,7 +64,7 @@ void cHeadCheck(Cycle &c, SilkSet &sk, double assGap, double &x, double &y) {
 	}
 }
 
-void cTailCheck(Cycle &c, BoostLineString &ls, int &i, double assGap, double &x, double &y) {
+void cTailCheck(Cycle &c, BoostLineString &ls, int &i, double assGap, double x, double y) {
 	if (c.isCW) {
 		if (c.dist(x, y) - c.r < assGap) {
 			//printf("ft-tail (%.4lf, %.4lf), coordDeg: %lf, r:%lf\n", x, y, c.coordDeg(x, y), c.dist(x, y));

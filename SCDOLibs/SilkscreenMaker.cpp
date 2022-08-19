@@ -73,6 +73,9 @@ void modifyStartPoint(T &ls, const double tagX, const double tagY) {
 
 			ls[i].set<0>(resX);
 			ls[i].set<1>(resY);
+
+			//makeIt is Close Polygon:
+			ls.push_back(ls[0]);
 			return;
 		}
 	}
@@ -114,6 +117,8 @@ void assemblyBuffer(Polygom &assembly, const double assemblygap, BoostMultiLineS
 void multiCropperBuffer(BoostMultiLineString multiCropperLs, const double croppergap, BoostMultipolygon &cropperMulLsBuffer) {
 
 	bg::strategy::buffer::distance_symmetric<double> cropper_dist_strategy(croppergap);
+	//bg::buffer(multiCropperLs, cropperMulLsBuffer, cropper_dist_strategy, side_strategy, join_strategy, end_strategy, point_strategy);
+
 	
 	for (int i = 0; i < multiCropperLs.size(); ++i) {
 		BoostMultipolygon tempBuffered;

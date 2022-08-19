@@ -53,8 +53,8 @@ int main()
 	silkscreenlen = atof(str.substr(14).c_str());
 	input >> str;
 
-	double addGapCrop = 0.0001;
-	double addGapAss = 0.0001;
+	double addGapCrop = 0.00015;
+	double addGapAss = 0.00015;
 
 	croppergap += addGapCrop;
 	assemblygap += addGapAss;
@@ -113,6 +113,5 @@ int main()
 		printf("c(%.4lf, %.4lf), stDeg: %.4lf, edDeg: %.4lf\n", tempC.rx, tempC.ry, tempC.stDeg, tempC.edDeg);
 	}
 	*/
-	
 	system("pause");
 }
