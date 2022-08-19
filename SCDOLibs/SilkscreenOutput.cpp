@@ -145,26 +145,42 @@ void SilkScreenOutput::skStCoordSafety() {
 
 	if (skSt_min_x > as_min_x) {
 		sort(skSt.begin(), skSt.end(), minXCmp);
-		addCoordSafety_X(as_min_x - 0.0001);
+		addCoordSafety_X(as_min_x - 0.0001, true);
 	}
 	
 	if (skSt_max_x < as_max_x) {
 		sort(skSt.begin(), skSt.end(), maxXCmp);
-		addCoordSafety_X(as_max_x + 0.0001);
+		addCoordSafety_X(as_max_x + 0.0001, false);
 	}
 	
 	if (skSt_min_y > as_min_y) {
 		sort(skSt.begin(), skSt.end(), minYCmp);
-		addCoordSafety_Y(as_min_y - 0.0001);
+		addCoordSafety_Y(as_min_y - 0.0001, true);
 	}
 
 	if (skSt_max_y < as_max_y) {
 		sort(skSt.begin(), skSt.end(), maxYCmp);
-		addCoordSafety_Y(as_max_y + 0.0001);
+		addCoordSafety_Y(as_max_y + 0.0001, false);
 	}
 }
 
-void SilkScreenOutput::addCoordSafety_Y(double addedY) {
+void SilkScreenOutput::addCoordSafetyLine(BoostLineString &addLs, vector<BoostLineString> &cropDiff) {
+	printf("cropDiff.size(): %d\n", cropDiff.size());
+	for (int i = 0; i < cropDiff.size(); ++i) {
+		BoostLineString &cropAddLs = cropDiff[i];
+		if (bg::intersects(cropAddLs, addLs) && !bg::intersects(cropAddLs, bgAssemblyRef))
+		{
+			SilkSet sk;
+			for (int k = 0; k < cropAddLs.size() - 1; ++k) {
+				drawLine(cropAddLs, k, sk);
+			}
+			skSt.push_back(sk);
+			return;
+		}
+	}
+}
+
+void SilkScreenOutput::addCoordSafety_Y(double addedY, bool isLower) {
 	for (int i = 0; i < skSt.size(); ++i) {
 		SilkSet temp = skSt[i];
 		Silk head = temp.sk[0];
@@ -179,9 +195,30 @@ void SilkScreenOutput::addCoordSafety_Y(double addedY) {
 			return;
 		}
 	}
+
+	printf("In_Y\n");
+
+	SilkSet &temp = skSt[0];
+	Silk &head = temp.sk[0];
+	Silk &tail = temp.sk[temp.sk.size() - 1];
+
+	bool isHead = (head.y1 < tail.y2 == isLower);
+	Silk &modiftPt = (isHead) ? head : tail;
+
+	BoostPoint bPt1(modiftPt.x1, modiftPt.y1), bPt2(modiftPt.x2, modiftPt.y2);
+	BoostLineString addLs{ { modiftPt.x1 , modiftPt.y1 },{ modiftPt.x1, addedY } };
+
+	for (int i = 0; i < multBGCropperRef.size(); ++i) {
+		if (bg::intersects(addLs, multBGCropperRef[i])) {
+			vector<BoostLineString> cropDiff;
+			makeSafetyWithCrop(cropperMulLsBufferRef[i], modiftPt.x1, addedY, cropDiff);
+			addCoordSafetyLine(addLs, cropDiff);
+			return;
+		}
+	}
 }
 
-void SilkScreenOutput::addCoordSafety_X(double addedX) {
+void SilkScreenOutput::addCoordSafety_X(double addedX, bool isLower) {
 	for (int i = 0; i < skSt.size(); ++i) {
 		SilkSet temp = skSt[i];
 		Silk head = temp.sk[0];
@@ -193,6 +230,27 @@ void SilkScreenOutput::addCoordSafety_X(double addedX) {
 		}
 		if (!isIlegealAddLine(addedX, head.y1, head.x1, head.y1)) {
 			skSt[i].insertLine(0, addedX, head.y1, head.x1, head.y1);
+			return;
+		}
+	}
+
+	printf("In_X\n");
+
+	SilkSet &temp = skSt[0];
+	Silk &head = temp.sk[0];
+	Silk &tail = temp.sk[temp.sk.size() - 1];
+
+	bool isHead = (head.x1 < tail.x2 == isLower);
+	Silk &modiftPt = (isHead) ? head : tail;
+
+	BoostPoint bPt1(modiftPt.x1, modiftPt.y1), bPt2(modiftPt.x2, modiftPt.y2);
+	BoostLineString addLs{ { modiftPt.x1 , modiftPt.y1 },{ addedX, modiftPt.y1 } };
+	for (int i = 0; i < multBGCropperRef.size(); ++i) {
+		if (bg::intersects(addLs, multBGCropperRef[i])) {
+			vector<BoostLineString> cropDiff;
+			printf("addedX: %lf, modiftPt.y1: %lf\n", addedX, modiftPt.y1);
+			makeSafetyWithCrop(cropperMulLsBufferRef[i], addedX, modiftPt.y1, cropDiff);
+			addCoordSafetyLine(addLs, cropDiff);
 			return;
 		}
 	}
