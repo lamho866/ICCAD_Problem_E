@@ -83,15 +83,17 @@ void ScoreCheck::scoreCase2(BoostLineString &assemblyLs) {
 	printf("-----------------------------------------\n");
 	printf("Silkscreen similar score\n");
 	printf("SilkscreenLen: %.5lf, assemblyOutLs: %5.lf\n", silkScreenLen, assemblyLen);
-	printf("Part A (Perimeter): %.5lf\n", scoreA);
-
+	printf("Part A (Perimeter): %.5lf\n\n", scoreA);
+	
 	//Part - B
 	double lineDiff = abs(problemLA.line - resultLA.line), arcDiff = abs(problemLA.arc - resultLA.arc);
+	printf("assLine : %d, assArc : %d\n", assembly.line, assembly.arc);
+	printf("ResultLine : %d, ResultLineArc : %d\n", resultLA.line, resultLA.arc);
 	printf("lineDiff : %lf, arcDiff : %lf\n", lineDiff, arcDiff);
 	printf("Up : %lf, Down : %lf\n", (lineDiff + arcDiff), (static_cast<double>(multBGCropper.size()) + problemLA.line + problemLA.arc));
 	double scoreB = 1 - ((lineDiff + arcDiff) / (static_cast<double>(multBGCropper.size()) + problemLA.line + problemLA.arc));
 	scoreB = scoreCal(scoreB, 0.1);
-	printf("Part B (LineArc Diff): %.5lf\n", scoreB);
+	printf("Part B (LineArc Diff): %.5lf\n\n", scoreB);
 
 	if (scoreA + scoreB <= 0.25)
 		printf("S2 = %.5lf\n", scoreA + scoreB);

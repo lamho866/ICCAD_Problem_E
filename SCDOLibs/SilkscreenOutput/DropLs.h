@@ -16,7 +16,7 @@ typedef bg::model::polygon<BoostPoint> BoostPolygon;
 typedef bg::model::multi_polygon<BoostPolygon> BoostMultipolygon;
 typedef bg::model::multi_linestring<BoostLineString> BoostMultiLineString;
 
-void dropLs(vector<bool> &canWrite, vector<SilkSet> &skSt);
+void dropLs(vector<bool> &canWrite, vector<SilkSet> &skSt, int assLine, int assArc);
 
 void cntMaxMin(double max_x, double max_y, double min_x, double min_y, int &max_x_cnt, int &max_y_cnt, int &min_x_cnt, int &min_y_cnt, SilkSet &sk);
 
