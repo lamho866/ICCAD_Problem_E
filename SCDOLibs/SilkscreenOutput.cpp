@@ -100,9 +100,9 @@ void SilkScreenOutput::ResultOutput(string fileName, Polygom &assembly, BoostMul
 	//silkScreenModify();
 
 	skStCoordSetUp();
-	//dropLs(canWrite, skSt);
+	dropLs(canWrite, skSt, assembly.line, assembly.arc);
 	
-	skStCoordSafety();
+	//skStCoordSafety();
 	skStCoordSetUp();
 	
 	
@@ -181,17 +181,23 @@ void SilkScreenOutput::addCoordSafetyLine(BoostLineString &addLs, vector<BoostLi
 }
 
 void SilkScreenOutput::addCoordSafety_Y(double addedY, bool isLower) {
+	canWrite.push_back(true);
+	SilkSet sk;
 	for (int i = 0; i < skSt.size(); ++i) {
 		SilkSet temp = skSt[i];
 		Silk head = temp.sk[0];
 		Silk tail = temp.sk[temp.sk.size() - 1];
 		//insertTail
 		if (!isIlegealAddLine(tail.x2, tail.y2, tail.x2, addedY)) {
-			skSt[i].insertLine(static_cast<int>(temp.sk.size()), tail.x2, tail.y2, tail.x2, addedY);
+			//skSt[i].insertLine(static_cast<int>(temp.sk.size()), tail.x2, tail.y2, tail.x2, addedY);
+			sk.addLine(tail.x2, tail.y2, tail.x2, addedY);
+			skSt.push_back(sk);
 			return;
 		}
 		if (!isIlegealAddLine(head.x1, addedY, head.x1, head.y1)) {
-			skSt[i].insertLine(0, head.x1, addedY, head.x1, head.y1);
+			sk.addLine(head.x1, addedY, head.x1, head.y1);
+			skSt.push_back(sk);
+			//skSt[i].insertLine(0, head.x1, addedY, head.x1, head.y1);
 			return;
 		}
 	}
@@ -219,17 +225,23 @@ void SilkScreenOutput::addCoordSafety_Y(double addedY, bool isLower) {
 }
 
 void SilkScreenOutput::addCoordSafety_X(double addedX, bool isLower) {
+	canWrite.push_back(true);
+	SilkSet sk;
 	for (int i = 0; i < skSt.size(); ++i) {
 		SilkSet temp = skSt[i];
 		Silk head = temp.sk[0];
 		Silk tail = temp.sk[temp.sk.size() - 1];
 		//insertTail
 		if (!isIlegealAddLine(tail.x2, tail.y2, addedX, tail.y2)) {
-			skSt[i].insertLine(static_cast<int>(temp.sk.size()), tail.x2, tail.y2, addedX, tail.y2);
+			//skSt[i].insertLine(static_cast<int>(temp.sk.size()), tail.x2, tail.y2, addedX, tail.y2);
+			sk.addLine(tail.x2, tail.y2, addedX, tail.y2);
+			skSt.push_back(sk);
 			return;
 		}
 		if (!isIlegealAddLine(addedX, head.y1, head.x1, head.y1)) {
-			skSt[i].insertLine(0, addedX, head.y1, head.x1, head.y1);
+			//skSt[i].insertLine(0, addedX, head.y1, head.x1, head.y1);
+			sk.addLine(addedX, head.y1, head.x1, head.y1);
+			skSt.push_back(sk);
 			return;
 		}
 	}

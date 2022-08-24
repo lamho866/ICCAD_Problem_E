@@ -1,6 +1,6 @@
 #include "DropLs.h"
 
-void dropLs(vector<bool> &canWrite, vector<SilkSet> &skSt) {
+void dropLs(vector<bool> &canWrite, vector<SilkSet> &skSt, int assLine, int assArc) {
 	canWrite.resize(skSt.size());
 	fill(canWrite.begin(), canWrite.end(), true);
 
@@ -13,17 +13,23 @@ void dropLs(vector<bool> &canWrite, vector<SilkSet> &skSt) {
 	}
 
 	int max_x_cnt = 0, max_y_cnt = 0, min_x_cnt = 0, min_y_cnt = 0;
+	int resLine = 0, resArc = 0;
 	for (int i = 0; i < skSt.size(); ++i) {
 		cntMaxMin(max_x, max_y, min_x, min_y, max_x_cnt, max_y_cnt, min_x_cnt, min_y_cnt, skSt[i]);
+		resLine += skSt[i].line, resArc += skSt[i].arc;
 	}
 
+	int diffLine = abs(assLine - resLine), diffArc = abs(assArc - resArc);
 	sort(skSt.begin(), skSt.end());
 
 	for (int i = 0; i < skSt.size(); ++i) {
 		int cur_max_x = 0, cur_max_y = 0, cur_min_x = 0, cur_min_y = 0;
 		cntMaxMin(max_x, max_y, min_x, min_y, cur_max_x, cur_max_y, cur_min_x, cur_min_y, skSt[i]);
 
-		if (max_x_cnt - cur_max_x > 0 &&
+		if (
+			abs(resLine - skSt[i].line - assLine) <= diffLine &&
+			abs(resArc - skSt[i].arc - assArc) <= diffArc &&
+			max_x_cnt - cur_max_x > 0 &&
 			max_y_cnt - cur_max_y > 0 &&
 			min_x_cnt - cur_min_x > 0 &&
 			min_y_cnt - cur_min_y > 0) {
@@ -32,6 +38,13 @@ void dropLs(vector<bool> &canWrite, vector<SilkSet> &skSt) {
 			max_y_cnt -= cur_max_y;
 			min_x_cnt -= cur_min_x;
 			min_y_cnt -= cur_min_y;
+
+			diffLine = abs(resLine - skSt[i].line - assLine);
+			diffArc = abs(resArc - skSt[i].arc - assArc);
+
+			resLine -= skSt[i].line;
+			resArc -= skSt[i].arc;
+
 			canWrite[i] = false;
 		}
 	}

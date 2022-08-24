@@ -5,7 +5,7 @@ SilkSet::SilkSet() :
 	max_x_cnt(0), max_y_cnt(0), min_x_cnt(0), min_y_cnt(0)
 	{}
 
-SilkSet::SilkSet(const SilkSet &skSt) : line(skSt.line), arc(skSt.line), len(skSt.len)
+SilkSet::SilkSet(const SilkSet &skSt) : line(skSt.line), arc(skSt.arc), len(skSt.len)
 , max_x(skSt.max_x), max_y(skSt.max_y), min_x(skSt.min_x), min_y(skSt.min_y), sk(skSt.sk) {
 	//sk = skSt.sk;
 	//sk.resize(skSt.sk.size());

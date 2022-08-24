@@ -11,9 +11,10 @@ private:
 public:
 	vector<Cycle> cyclePt;
 	string shape;
+	int line, arc;
 	void addLine(string &s);
 	void cyclePtCombe();
 	void inputLine(double &x1, double &y1, double &x2, double &y2);
 	void inputArc(Cycle &c);
-	Polygom() {}
+	Polygom();
 };

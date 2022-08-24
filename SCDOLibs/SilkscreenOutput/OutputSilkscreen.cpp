@@ -142,6 +142,7 @@ void arcCombine(SilkSet &skLs) {
 			skLs.sk[i].y2 = skLs.sk[i + 1].y2;
 
 			skLs.sk.erase(skLs.sk.begin() + i + 1);
+			skLs.arc--;
 			--i;
 		}
 	}
