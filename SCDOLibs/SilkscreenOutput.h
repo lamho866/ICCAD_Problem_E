@@ -6,6 +6,7 @@
 #include "SilkscreenOutput/DropLs.h"
 #include "SilkscreenOutput/OutputSilkscreen.h"
 #include "SilkscreenOutput/SafetyWithCrop.h"
+#include "ScoreCheck/SkValueCheck.h"
 
 #include "cmath"
 #include <vector>
@@ -24,18 +25,13 @@ typedef bg::model::multi_linestring<BoostLineString> BoostMultiLineString;
 class SilkScreenOutput {
 private:
 	void write(string &fileName);
-	void silkScreenModify();
-	void arcLineCheck(SilkSet &sk);
-	void addTurningPoint(int &i, SilkSet &skSet, bool isHeaed);
-	void addArcSafetyLine(int &i, SilkSet &skSet);
 	void skStCoordSetUp();
 	bool isIlegealAddLine(double x1, double y1, double x2, double y2);
-	//int inCycleIdx(int i, BoostLineString &ls, double x, double y);
-	//bool isInMoreCycle(int i, BoostLineString &ls, int cIdx, double x, double y);
+
 public:
-	double silkscreenlen, assemblygap;
+	double silkscreenlen, assemblygap, cropGap, addSafety;
 	vector<BoostPolygon> cycleList;
-	vector<SilkSet> skSt;
+	vector<SilkSet> skSt , legalSk, illegalSk;
 	vector<Cycle> &cyclePt;
 	vector<bool> canWrite;
 	double as_max_x, as_max_y, as_min_x, as_min_y;
@@ -43,7 +39,7 @@ public:
 	BoostMultipolygon &cropperMulLsBufferRef, &multBGCropperRef;
 	BoostPolygon &bgAssemblyRef;
 
-	SilkScreenOutput(double _silkscreenlen, double _assemblygap, BoostPolygon &bgAssembly, vector<Cycle> &cyclePoint, BoostLineString assemblyLs, BoostMultipolygon &cropperMulLsBuffer, BoostMultipolygon &multBGCropper);
+	SilkScreenOutput(double _silkscreenlen, double _assemblygap, double _cropGap, double _addSafety, BoostPolygon &bgAssembly, vector<Cycle> &cyclePoint, BoostLineString assemblyLs, BoostMultipolygon &cropperMulLsBuffer, BoostMultipolygon &multBGCropper);
 
 	void makeCycleEachPoint(vector<Cycle> &cyclePt, const double assemblyGap, vector<BoostPolygon> &cycleList);
 
@@ -56,4 +52,6 @@ public:
 	void addCoordSafety_X(double addedX, bool isLower);
 
 	void addCoordSafetyLine(BoostLineString &addLs, vector<BoostLineString> &cropDiff);
+
+	void classifyLegal();
 };

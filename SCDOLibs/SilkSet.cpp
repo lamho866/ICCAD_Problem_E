@@ -73,6 +73,20 @@ void SilkSet::updateMinMaxCoord() {
 	findCoordMaxMin(ls, max_x, max_y, min_x, min_y);
 }
 
+BoostLineString SilkSet::bgLineStr() {
+	Polygom bgSkStr;
+	BoostLineString lineStr;
+	for (int i = 0; i < sk.size(); ++i) {
+		Silk &cur = sk[i];
+		if (cur.isLine)
+			bgSkStr.inputLine(cur.x1, cur.y1, cur.x2, cur.y2);
+		else
+			bgSkStr.inputArc(cur);
+	}
+	makeLine(bgSkStr, lineStr);
+	return lineStr;
+}
+
 bool minXCmp(const SilkSet &a,const SilkSet &b) {
 	double aMinX = min(a.sk[0].x1, a.sk[a.sk.size() - 1].x2);
 	double bMinX = min(b.sk[0].x1, b.sk[b.sk.size() - 1].x2);
