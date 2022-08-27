@@ -2,6 +2,7 @@
 #include "Common.h"
 #include "Polygom.h"
 #include "SilkscreenMaker.h"
+#include "ScoreCheck/SkValueCheck.h"
 
 #include <iostream>
 #include <string>
@@ -23,6 +24,8 @@ public:
 	LineArc() : line(0), arc(0) {}
 	void readLine(string s);
 };
+
+
 
 class ScoreCheck {
 private:
