@@ -102,20 +102,14 @@ void ScoreCheck::scoreCase2(BoostLineString &assemblyLs) {
 }
 
 double ScoreCheck::avgCropperDistance(vector<BoostLineString> &resultLs, BoostMultipolygon &multBGCropper, vector<int> &illegalIdx, vector<double> &illDist, bool &isLegal) {
-	double tCropper = 0.0;
+	double tCropper = 0.0, dist;
 	for (int i = 0; i < resultLs.size(); ++i) {
-		double curMin = 999999.0;
-		for (int j = 0; j < multBGCropper.size(); ++j)
-		{
-			double dist = static_cast<double>(bg::distance(multBGCropper[j], resultLs[i]));
-			curMin = min(curMin, dist);
-		}
-		tCropper += curMin;
-		if (curMin < croppergap) {
+		if (skCropIsUnValue(resultLs[i], multBGCropper, croppergap, dist)) {
 			isLegal = false;
 			illegalIdx.push_back(i);
-			illDist.push_back(curMin);
+			illDist.push_back(dist);
 		}
+		tCropper += dist;
 	}
 	tCropper /= static_cast<double>(resultLs.size());
 	return tCropper;
@@ -147,15 +141,14 @@ void ScoreCheck::scoreCase4() {
 	vector<double> illDist;
 	bool isLegal = true;
 
-	double tOutline = 0.0;
+	double tOutline = 0.0, dist;
 	for (int i = 0; i < resultLs.size(); ++i) {
-		double dist = bg::distance(bgAssembly, resultLs[i]);
-		tOutline += dist;
-		if (dist < assemblygap) {
+		if (skAssIsUnValue(resultLs[i], bgAssembly, assemblygap, dist)) {
 			isLegal = false;
 			illegalIdx.push_back(i);
 			illDist.push_back(dist);
 		}
+		tOutline += dist;
 	}
 	tOutline /= static_cast<double>(resultLs.size());
 	double score = 1 - (tOutline - assemblygap) * 10 / assemblygap;
