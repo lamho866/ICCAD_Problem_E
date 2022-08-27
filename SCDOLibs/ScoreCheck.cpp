@@ -104,7 +104,7 @@ void ScoreCheck::scoreCase2(BoostLineString &assemblyLs) {
 double ScoreCheck::avgCropperDistance(vector<BoostLineString> &resultLs, BoostMultipolygon &multBGCropper, vector<int> &illegalIdx, vector<double> &illDist, bool &isLegal) {
 	double tCropper = 0.0, dist;
 	for (int i = 0; i < resultLs.size(); ++i) {
-		if (skCropIsValue(resultLs[i], multBGCropper, croppergap, dist)) {
+		if (skCropIsUnValue(resultLs[i], multBGCropper, croppergap, dist)) {
 			isLegal = false;
 			illegalIdx.push_back(i);
 			illDist.push_back(dist);
@@ -143,7 +143,7 @@ void ScoreCheck::scoreCase4() {
 
 	double tOutline = 0.0, dist;
 	for (int i = 0; i < resultLs.size(); ++i) {
-		if (skAssIsValue(resultLs[i], bgAssembly, assemblygap, dist)) {
+		if (skAssIsUnValue(resultLs[i], bgAssembly, assemblygap, dist)) {
 			isLegal = false;
 			illegalIdx.push_back(i);
 			illDist.push_back(dist);

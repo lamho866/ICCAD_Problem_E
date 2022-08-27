@@ -1,7 +1,7 @@
 #include "SkValueCheck.h"
 
 
-bool skCropIsValue(BoostLineString &sk, BoostMultipolygon &multBGCropper, double cropGap, double &minDist) {
+bool skCropIsUnValue(BoostLineString &sk, BoostMultipolygon &multBGCropper, double cropGap, double &minDist) {
 	double curMin = 999999.0;
 	for (int j = 0; j < multBGCropper.size(); ++j)
 	{
@@ -12,7 +12,7 @@ bool skCropIsValue(BoostLineString &sk, BoostMultipolygon &multBGCropper, double
 	return minDist < cropGap;
 }
 
-bool skAssIsValue(BoostLineString &sk, BoostPolygon &bgAssembly, double assGap, double &minDist) {
+bool skAssIsUnValue(BoostLineString &sk, BoostPolygon &bgAssembly, double assGap, double &minDist) {
 	minDist = bg::distance(bgAssembly, sk);
 	return minDist < assGap;
 }

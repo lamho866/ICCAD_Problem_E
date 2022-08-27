@@ -10,6 +10,6 @@ typedef bg::model::polygon<BoostPoint> BoostPolygon;
 typedef bg::model::multi_polygon<BoostPolygon> BoostMultipolygon;
 typedef bg::model::multi_linestring<BoostLineString> BoostMultiLineString;
 
-bool skCropIsValue(BoostLineString &sk, BoostMultipolygon &multBGCropper,double cropGap,  double &minDist);
+bool skCropIsUnValue(BoostLineString &sk, BoostMultipolygon &multBGCropper,double cropGap,  double &minDist);
 
-bool skAssIsValue(BoostLineString &sk, BoostPolygon &bgAssembly, double assGap, double &minDist);
+bool skAssIsUnValue(BoostLineString &sk, BoostPolygon &bgAssembly, double assGap, double &minDist);
