@@ -31,6 +31,7 @@ public:
 	void addCircle(double x1, double y1, double x2, double y2, double rx, double ry, bool isCW, int cyclePtIdx);
 	void insertCircle(int i, double x1, double y1, double x2, double y2, double rx, double ry, bool isCW, int cyclePtIdx);
 	void insertLine(int i, double x1, double y1, double x2, double y2);
+	BoostLineString bgLineStr();
 };
 
 bool minXCmp(const SilkSet &a,const SilkSet &b);

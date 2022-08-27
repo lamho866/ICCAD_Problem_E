@@ -1,23 +1,16 @@
 #include "SilkscreenOutput.h"
 
-SilkScreenOutput::SilkScreenOutput(double _silkscreenlen, double _assemblygap, BoostPolygon &bgAssembly, vector<Cycle> &cyclePoint, BoostLineString assemblyLs, BoostMultipolygon &cropperMulLsBuffer, BoostMultipolygon &multBGCropper) :
-	silkscreenlen(_silkscreenlen), assemblygap(_assemblygap), bgAssemblyRef(bgAssembly), cyclePt(cyclePoint), cropperMulLsBufferRef(cropperMulLsBuffer), multBGCropperRef(multBGCropper){
+SilkScreenOutput::SilkScreenOutput(double _silkscreenlen, double _assemblygap, double _cropGap, double _addSafety, BoostPolygon &bgAssembly, vector<Cycle> &cyclePoint, BoostLineString assemblyLs, BoostMultipolygon &cropperMulLsBuffer, BoostMultipolygon &multBGCropper) :
+	silkscreenlen(_silkscreenlen), assemblygap(_assemblygap), cropGap(_cropGap), addSafety(_addSafety), bgAssemblyRef(bgAssembly), cyclePt(cyclePoint), cropperMulLsBufferRef(cropperMulLsBuffer), multBGCropperRef(multBGCropper){
 	findCoordMaxMin(assemblyLs, as_max_x, as_max_y, as_min_x, as_min_y);
 	makeCycleEachPoint(cyclePt, assemblygap, cycleList);
 }
 
 void SilkScreenOutput::write(string &fileName) {
-	if (canWrite.size() != skSt.size()) {
-		canWrite.resize(skSt.size());
-		fill(canWrite.begin(), canWrite.end(), true);
-	}
-
 	ofstream resultFile(fileName + ".txt");
-	for (int i = 0; i < skSt.size(); ++i) {
-		if (canWrite[i]) {
-			resultFile << "silkscreen\n";
-			skSt[i].write(resultFile);
-		}
+	for (int i = 0; i < legalSk.size(); ++i) {
+		resultFile << "silkscreen\n";
+		legalSk[i].write(resultFile);
 	}
 	resultFile.close();
 }
@@ -38,69 +31,16 @@ void SilkScreenOutput::makeCycleEachPoint(vector<Cycle> &cyclePt, const double a
 	}
 }
 
-void SilkScreenOutput::addTurningPoint(int &i, SilkSet &skSet, bool isHeaed) {
-	Silk &sk = skSet.sk[i];
-	Cycle c = cyclePt[sk.cyclePtIdx];
-	double r = c.r - assemblygap;
-
-	if (isHeaed) {
-		double x1, y1;
-		rtPt(0.0, r, -c.stDeg, x1, y1);
-		x1 += c.rx, y1 += c.ry;
-		sk.x1 = x1, sk.y1 = y1;
-
-		skSet.insertLine(i, skSet.sk[i - 1].x2, y1, x1, y1);
-		skSet.insertLine(i, skSet.sk[i - 1].x2, skSet.sk[i - 1].y2, skSet.sk[i - 1].x2, y1);
-		return;
-	}
-
-	double x2, y2;
-	rtPt(0.0, r, -c.edDeg, x2, y2);
-	x2 += c.rx, y2 += c.ry;
-	sk.x2 = x2, sk.y2 = y2;
-
-	skSet.insertLine(i + 1, x2, y2, skSet.sk[i + 1].x1, y2);
-	skSet.insertLine(i + 1, skSet.sk[i + 1].x1, y2, skSet.sk[i + 1].x1, skSet.sk[i + 1].y1);
-}
-
-void SilkScreenOutput::addArcSafetyLine(int &i, SilkSet &skSet) {
-	if (i > 0 && skSet.sk[i - 1].isLine) {
-		addTurningPoint(i, skSet, true);
-		//back to arc
-		i += 2;
-	}
-
-	if (i + 1 < skSet.sk.size() && skSet.sk[i + 1].isLine) {
-		addTurningPoint(i, skSet, false);
-		//move out arc & addTurningPoint
-		i += 3;
-	}
-}
-
-void SilkScreenOutput::arcLineCheck(SilkSet &skSet) {
-	for (int i = 0; i < skSet.sk.size(); ++i) {
-		if (skSet.sk[i].isLine == false && skSet.sk[i].isCW == false) {
-			addArcSafetyLine(i, skSet);
-		}
-	}
-}
-
-void SilkScreenOutput::silkScreenModify() {
-	for (int i = 0; i < skSt.size(); ++i) {
-		arcLineCheck(skSt[i]);
-	}
-}
-
 void SilkScreenOutput::ResultOutput(string fileName, Polygom &assembly, BoostMultipolygon &multBGCropper, vector<BoostLineString> &bgDiff) {
 	for (int i = 0; i < bgDiff.size(); ++i) {
 		if (bg::within(bgDiff[i], multBGCropper) == false && isLargerEnough(bgDiff[i], silkscreenlen)) {
 			outputSilkscreen(skSt, bgDiff[i], assembly.cyclePt, cyclePt, cycleList, assemblygap);
 		}
 	}
-	//silkScreenModify();
 
 	skStCoordSetUp();
 	dropLs(canWrite, skSt, assembly.line, assembly.arc);
+	classifyLegal();
 	
 	//skStCoordSafety();
 	skStCoordSetUp();
@@ -268,3 +208,17 @@ void SilkScreenOutput::addCoordSafety_X(double addedX, bool isLower) {
 	}
 }
 
+void SilkScreenOutput::classifyLegal() {
+	if (canWrite.size() == 0) return;
+	double dist;
+	for (int i = 0; i < canWrite.size(); ++i) {
+		if (!canWrite[i]) continue;
+		BoostLineString skLineStr = skSt[i].bgLineStr();
+		bool isCropValue = !skCropIsUnValue(skLineStr, multBGCropperRef, cropGap - addSafety, dist);
+		bool isAssValue = !skAssIsUnValue(skLineStr, bgAssemblyRef, assemblygap - addSafety, dist);
+		if (isCropValue && isAssValue)
+			legalSk.push_back(skSt[i]);
+		else
+			illegalSk.push_back(skSt[i]);
+	}
+}

@@ -95,7 +95,7 @@ int main()
 	buildAssemblyLine(assembly, assemblygap, multiCropperLs, croppergap, cropperMulLsBuffer, bgDiff);
 
 	assembly.cyclePtCombe();
-	SilkScreenOutput silkScreenOutput(silkscreenlen, assemblygap, bgAssembly, assembly.cyclePt, assemblyLs, cropperMulLsBuffer, multBGCropper);
+	SilkScreenOutput silkScreenOutput(silkscreenlen, assemblygap, croppergap, addGapAss, bgAssembly, assembly.cyclePt, assemblyLs, cropperMulLsBuffer, multBGCropper);
 	silkScreenOutput.ResultOutput(rFile, assembly, multBGCropper, bgDiff);
 
 
