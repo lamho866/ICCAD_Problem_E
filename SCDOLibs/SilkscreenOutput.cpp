@@ -38,25 +38,22 @@ void SilkScreenOutput::ResultOutput(string fileName, Polygom &assembly, BoostMul
 		}
 	}
 
-	skStCoordSetUp();
+	skStCoordSetUp(skSt);
 	dropLs(canWrite, skSt, assembly.line, assembly.arc);
 	classifyLegal();
-	
-	skStCoordSafety();
-	skStCoordSetUp();
 }
 
-void SilkScreenOutput::skStCoordSetUp() {
-	if (skSt.size() == 0) return;
+void SilkScreenOutput::skStCoordSetUp(vector<SilkSet> &skStcur) {
+	if (skStcur.size() == 0) return;
 
-	skSt[0].updateMinMaxCoord();
-	skSt_max_x = skSt[0].max_x, skSt_min_x = skSt[0].min_x;
-	skSt_max_y = skSt[0].max_y, skSt_min_y = skSt[0].min_y;
+	skStcur[0].updateMinMaxCoord();
+	skSt_max_x = skStcur[0].max_x, skSt_min_x = skStcur[0].min_x;
+	skSt_max_y = skStcur[0].max_y, skSt_min_y = skStcur[0].min_y;
 
-	for (int i = 1; i < skSt.size(); ++i) {
-		skSt[i].updateMinMaxCoord();
-		skSt_max_x = max(skSt_max_x, skSt[i].max_x), skSt_min_x = min(skSt_min_x, skSt[i].min_x);
-		skSt_max_y = max(skSt_max_y, skSt[i].max_y), skSt_min_y = min(skSt_min_y, skSt[i].min_y);
+	for (int i = 1; i < skStcur.size(); ++i) {
+		skStcur[i].updateMinMaxCoord();
+		skSt_max_x = max(skSt_max_x, skStcur[i].max_x), skSt_min_x = min(skSt_min_x, skStcur[i].min_x);
+		skSt_max_y = max(skSt_max_y, skStcur[i].max_y), skSt_min_y = min(skSt_min_y, skStcur[i].min_y);
 	}
 }
 
@@ -79,24 +76,30 @@ bool SilkScreenOutput::isIlegealAddLine(double x1, double y1, double x2, double 
 }
 
 void SilkScreenOutput::skStCoordSafety() {
+	printf("Stop\n");
+	skStCoordSetUp(legalSk);
 
 	if (skSt_min_x > as_min_x) {
-		sort(skSt.begin(), skSt.end(), minXCmp);
+		printf("modify mix_x =====>\n");
+		sort(legalSk.begin(), legalSk.end(), minXCmp);
 		addCoordSafety_X(as_min_x - 0.0001, true);
 	}
 	
 	if (skSt_max_x < as_max_x) {
-		sort(skSt.begin(), skSt.end(), maxXCmp);
+		printf("modify max_x =====>\n");
+		sort(legalSk.begin(), legalSk.end(), maxXCmp);
 		addCoordSafety_X(as_max_x + 0.0001, false);
 	}
 	
 	if (skSt_min_y > as_min_y) {
-		sort(skSt.begin(), skSt.end(), minYCmp);
+		printf("modify min_y =====>\n");
+		sort(legalSk.begin(), legalSk.end(), minYCmp);
 		addCoordSafety_Y(as_min_y - 0.0001, true);
 	}
 
 	if (skSt_max_y < as_max_y) {
-		sort(skSt.begin(), skSt.end(), maxYCmp);
+		printf("modify max_y =====>\n");
+		sort(legalSk.begin(), legalSk.end(), maxYCmp);
 		addCoordSafety_Y(as_max_y + 0.0001, false);
 	}
 }
@@ -119,8 +122,8 @@ void SilkScreenOutput::addCoordSafetyLine(BoostLineString &addLs, vector<BoostLi
 
 void SilkScreenOutput::addCoordSafety_Y(double addedY, bool isLower) {
 	SilkSet sk;
-	for (int i = 0; i < skSt.size(); ++i) {
-		SilkSet temp = skSt[i];
+	for (int i = 0; i < legalSk.size(); ++i) {
+		SilkSet &temp = legalSk[i];
 		Silk head = temp.sk[0];
 		Silk tail = temp.sk[temp.sk.size() - 1];
 		//insertTail
@@ -140,7 +143,7 @@ void SilkScreenOutput::addCoordSafety_Y(double addedY, bool isLower) {
 
 	printf("In_Y\n");
 
-	SilkSet &temp = skSt[0];
+	SilkSet &temp = legalSk[0];
 	Silk &head = temp.sk[0];
 	Silk &tail = temp.sk[temp.sk.size() - 1];
 
@@ -162,8 +165,8 @@ void SilkScreenOutput::addCoordSafety_Y(double addedY, bool isLower) {
 
 void SilkScreenOutput::addCoordSafety_X(double addedX, bool isLower) {
 	SilkSet sk;
-	for (int i = 0; i < skSt.size(); ++i) {
-		SilkSet temp = skSt[i];
+	for (int i = 0; i < legalSk.size(); ++i) {
+		SilkSet &temp = legalSk[i];
 		Silk head = temp.sk[0];
 		Silk tail = temp.sk[temp.sk.size() - 1];
 		//insertTail
@@ -183,7 +186,7 @@ void SilkScreenOutput::addCoordSafety_X(double addedX, bool isLower) {
 
 	printf("In_X\n");
 
-	SilkSet &temp = skSt[0];
+	SilkSet &temp = legalSk[0];
 	Silk &head = temp.sk[0];
 	Silk &tail = temp.sk[temp.sk.size() - 1];
 
