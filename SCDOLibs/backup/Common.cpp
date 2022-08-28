@@ -35,11 +35,6 @@ bool almost_equal(double x, double y)
 	return abs(x - y) <= std::numeric_limits<double>::epsilon();
 }
 
-bool score_almost_equal(double x, double y)
-{
-	return abs(x - y) <= 0.000001;
-}
-
 void findCoordMaxMin(BoostLineString ls, double &max_x, double &max_y, double &min_x, double &min_y) {
 	if (ls.size() == 0) return;
 

@@ -1,16 +1,23 @@
 #include "SilkscreenOutput.h"
 
-SilkScreenOutput::SilkScreenOutput(double _silkscreenlen, double _assemblygap, double _cropGap, BoostPolygon &bgAssembly, vector<Cycle> &cyclePoint, BoostLineString assemblyLs, BoostMultipolygon &cropperMulLsBuffer, BoostMultipolygon &multBGCropper) :
-	silkscreenlen(_silkscreenlen), assemblygap(_assemblygap), cropGap(_cropGap), bgAssemblyRef(bgAssembly), cyclePt(cyclePoint), cropperMulLsBufferRef(cropperMulLsBuffer), multBGCropperRef(multBGCropper){
+SilkScreenOutput::SilkScreenOutput(double _silkscreenlen, double _assemblygap, BoostPolygon &bgAssembly, vector<Cycle> &cyclePoint, BoostLineString assemblyLs, BoostMultipolygon &cropperMulLsBuffer, BoostMultipolygon &multBGCropper) :
+	silkscreenlen(_silkscreenlen), assemblygap(_assemblygap), bgAssemblyRef(bgAssembly), cyclePt(cyclePoint), cropperMulLsBufferRef(cropperMulLsBuffer), multBGCropperRef(multBGCropper){
 	findCoordMaxMin(assemblyLs, as_max_x, as_max_y, as_min_x, as_min_y);
 	makeCycleEachPoint(cyclePt, assemblygap, cycleList);
 }
 
 void SilkScreenOutput::write(string &fileName) {
+	if (canWrite.size() != skSt.size()) {
+		canWrite.resize(skSt.size());
+		fill(canWrite.begin(), canWrite.end(), true);
+	}
+
 	ofstream resultFile(fileName + ".txt");
-	for (int i = 0; i < legalSk.size(); ++i) {
-		resultFile << "silkscreen\n";
-		legalSk[i].write(resultFile);
+	for (int i = 0; i < skSt.size(); ++i) {
+		if (canWrite[i]) {
+			resultFile << "silkscreen\n";
+			skSt[i].write(resultFile);
+		}
 	}
 	resultFile.close();
 }
@@ -31,19 +38,72 @@ void SilkScreenOutput::makeCycleEachPoint(vector<Cycle> &cyclePt, const double a
 	}
 }
 
+void SilkScreenOutput::addTurningPoint(int &i, SilkSet &skSet, bool isHeaed) {
+	Silk &sk = skSet.sk[i];
+	Cycle c = cyclePt[sk.cyclePtIdx];
+	double r = c.r - assemblygap;
+
+	if (isHeaed) {
+		double x1, y1;
+		rtPt(0.0, r, -c.stDeg, x1, y1);
+		x1 += c.rx, y1 += c.ry;
+		sk.x1 = x1, sk.y1 = y1;
+
+		skSet.insertLine(i, skSet.sk[i - 1].x2, y1, x1, y1);
+		skSet.insertLine(i, skSet.sk[i - 1].x2, skSet.sk[i - 1].y2, skSet.sk[i - 1].x2, y1);
+		return;
+	}
+
+	double x2, y2;
+	rtPt(0.0, r, -c.edDeg, x2, y2);
+	x2 += c.rx, y2 += c.ry;
+	sk.x2 = x2, sk.y2 = y2;
+
+	skSet.insertLine(i + 1, x2, y2, skSet.sk[i + 1].x1, y2);
+	skSet.insertLine(i + 1, skSet.sk[i + 1].x1, y2, skSet.sk[i + 1].x1, skSet.sk[i + 1].y1);
+}
+
+void SilkScreenOutput::addArcSafetyLine(int &i, SilkSet &skSet) {
+	if (i > 0 && skSet.sk[i - 1].isLine) {
+		addTurningPoint(i, skSet, true);
+		//back to arc
+		i += 2;
+	}
+
+	if (i + 1 < skSet.sk.size() && skSet.sk[i + 1].isLine) {
+		addTurningPoint(i, skSet, false);
+		//move out arc & addTurningPoint
+		i += 3;
+	}
+}
+
+void SilkScreenOutput::arcLineCheck(SilkSet &skSet) {
+	for (int i = 0; i < skSet.sk.size(); ++i) {
+		if (skSet.sk[i].isLine == false && skSet.sk[i].isCW == false) {
+			addArcSafetyLine(i, skSet);
+		}
+	}
+}
+
+void SilkScreenOutput::silkScreenModify() {
+	for (int i = 0; i < skSt.size(); ++i) {
+		arcLineCheck(skSt[i]);
+	}
+}
+
 void SilkScreenOutput::ResultOutput(string fileName, Polygom &assembly, BoostMultipolygon &multBGCropper, vector<BoostLineString> &bgDiff) {
 	for (int i = 0; i < bgDiff.size(); ++i) {
 		if (bg::within(bgDiff[i], multBGCropper) == false && isLargerEnough(bgDiff[i], silkscreenlen)) {
 			outputSilkscreen(skSt, bgDiff[i], assembly.cyclePt, cyclePt, cycleList, assemblygap);
 		}
 	}
+	//silkScreenModify();
 
 	skStCoordSetUp();
-	//dropLs(canWrite, skSt, assembly.line, assembly.arc);
-	classifyLegal();
+	dropLs(canWrite, skSt, assembly.line, assembly.arc);
 	
 	//skStCoordSafety();
-	skStCoordSetUp();
+	//skStCoordSetUp();
 	
 	
 	write(fileName);
@@ -121,23 +181,17 @@ void SilkScreenOutput::addCoordSafetyLine(BoostLineString &addLs, vector<BoostLi
 }
 
 void SilkScreenOutput::addCoordSafety_Y(double addedY, bool isLower) {
-	canWrite.push_back(true);
-	SilkSet sk;
 	for (int i = 0; i < skSt.size(); ++i) {
 		SilkSet temp = skSt[i];
 		Silk head = temp.sk[0];
 		Silk tail = temp.sk[temp.sk.size() - 1];
 		//insertTail
 		if (!isIlegealAddLine(tail.x2, tail.y2, tail.x2, addedY)) {
-			//skSt[i].insertLine(static_cast<int>(temp.sk.size()), tail.x2, tail.y2, tail.x2, addedY);
-			sk.addLine(tail.x2, tail.y2, tail.x2, addedY);
-			skSt.push_back(sk);
+			skSt[i].insertLine(static_cast<int>(temp.sk.size()), tail.x2, tail.y2, tail.x2, addedY);
 			return;
 		}
 		if (!isIlegealAddLine(head.x1, addedY, head.x1, head.y1)) {
-			sk.addLine(head.x1, addedY, head.x1, head.y1);
-			skSt.push_back(sk);
-			//skSt[i].insertLine(0, head.x1, addedY, head.x1, head.y1);
+			skSt[i].insertLine(0, head.x1, addedY, head.x1, head.y1);
 			return;
 		}
 	}
@@ -165,23 +219,17 @@ void SilkScreenOutput::addCoordSafety_Y(double addedY, bool isLower) {
 }
 
 void SilkScreenOutput::addCoordSafety_X(double addedX, bool isLower) {
-	canWrite.push_back(true);
-	SilkSet sk;
 	for (int i = 0; i < skSt.size(); ++i) {
 		SilkSet temp = skSt[i];
 		Silk head = temp.sk[0];
 		Silk tail = temp.sk[temp.sk.size() - 1];
 		//insertTail
 		if (!isIlegealAddLine(tail.x2, tail.y2, addedX, tail.y2)) {
-			//skSt[i].insertLine(static_cast<int>(temp.sk.size()), tail.x2, tail.y2, addedX, tail.y2);
-			sk.addLine(tail.x2, tail.y2, addedX, tail.y2);
-			skSt.push_back(sk);
+			skSt[i].insertLine(static_cast<int>(temp.sk.size()), tail.x2, tail.y2, addedX, tail.y2);
 			return;
 		}
 		if (!isIlegealAddLine(addedX, head.y1, head.x1, head.y1)) {
-			//skSt[i].insertLine(0, addedX, head.y1, head.x1, head.y1);
-			sk.addLine(addedX, head.y1, head.x1, head.y1);
-			skSt.push_back(sk);
+			skSt[i].insertLine(0, addedX, head.y1, head.x1, head.y1);
 			return;
 		}
 	}
@@ -208,65 +256,3 @@ void SilkScreenOutput::addCoordSafety_X(double addedX, bool isLower) {
 	}
 }
 
-bool SilkScreenOutput::lineIsLegal(BoostLineString ls) {
-	double dist;
-	bool isCropValue = !skCropIsUnValue(ls, multBGCropperRef, cropGap, dist);
-	printf("dist: %lf\n", dist);
-	bool isAssValue = !skAssIsUnValue(ls, bgAssemblyRef, assemblygap, dist);
-	printf("dist: %lf\n", dist);
-	printf("isCropValue: %d, isAssValue: %d\n\n", isCropValue, isAssValue);
-	return isCropValue && isAssValue;
-}
-
-void SilkScreenOutput::classifyLegal() {
-	if (canWrite.size() == 0) {
-		canWrite.resize(skSt.size());
-		fill(canWrite.begin(), canWrite.end(), true);
-	}
-	double dist;
-	for (int i = 0; i < canWrite.size(); ++i) {
-		if (!canWrite[i]) continue;
-		legalSk.push_back(skSt[i]);
-		/*if (lineIsLegal(skSt[i].bgLineStr()))
-			legalSk.push_back(skSt[i]);
-		else
-			illegalSk.push_back(skSt[i]);
-			*/
-	}
-}
-
-bool SilkScreenOutput::isNeedModifty() {
-	return illegalSk.size() > 0;
-}
-
-void SilkScreenOutput::curCloseIllegalSk(BoostLineString ls, vector<BoostLineString> &bgDiff, BoostLineString &curClose, double &dist) {
-	double minClose = 9999.0;
-	int idx = 0;
-	for (int i = 0; i < bgDiff.size(); ++i) {
-		double curDist = bg::distance(ls, bgDiff[i]);
-		if (curDist < minClose)
-			idx = i, minClose = curDist;
-	}
-	curClose = bgDiff[idx];
-	dist = minClose;
-}
-
-void SilkScreenOutput::modiftyTheIllegalSk(Polygom &assembly, double addSafety, vector<BoostLineString> &bgDiff) {
-	if (illegalSk.size() == 0) return;
-	double curClose = 9999.0;
-	for (int i = 0; i < illegalSk.size(); ++i) {
-		double dist;
-		BoostLineString rpSk;
-		curCloseIllegalSk(illegalSk[i].bgLineStr(), bgDiff, rpSk, dist);
-		if (dist < 0.00005 || almost_equal(dist, 0.00005))
-		{
-			vector<SilkSet> skStTemp;
-			outputSilkscreen(skStTemp, rpSk, assembly.cyclePt, cyclePt, cycleList, assemblygap + addSafety);
-			if (lineIsLegal(skStTemp[0].bgLineStr())) {
-				legalSk.push_back(skStTemp[0]);
-				illegalSk.erase(illegalSk.begin() + i);
-				--i;
-			}
-		}
-	}
-}

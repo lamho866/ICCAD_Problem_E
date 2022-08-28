@@ -95,9 +95,16 @@ int main()
 	buildAssemblyLine(assembly, assemblygap, multiCropperLs, croppergap, cropperMulLsBuffer, bgDiff);
 
 	assembly.cyclePtCombe();
-	SilkScreenOutput silkScreenOutput(silkscreenlen, assemblygap, croppergap, addGapAss, bgAssembly, assembly.cyclePt, assemblyLs, cropperMulLsBuffer, multBGCropper);
+	SilkScreenOutput silkScreenOutput(silkscreenlen, assemblygap, croppergap, bgAssembly, assembly.cyclePt, assemblyLs, cropperMulLsBuffer, multBGCropper);
 	silkScreenOutput.ResultOutput(rFile, assembly, multBGCropper, bgDiff);
-
+	/*
+	for (double addSafety = 0.00005; addSafety <= 0.0002; addSafety += 0.00005) {
+		if (!silkScreenOutput.isNeedModifty()) break;
+		printf("new\n");
+		buildAssemblyLine(assembly, assemblygap + addSafety, multiCropperLs, croppergap + addSafety, cropperMulLsBuffer, bgDiff);
+		silkScreenOutput.modiftyTheIllegalSk(assembly, addSafety, bgDiff);
+	}
+	*/
 
 	//GraphDraw
 	checkoutPutResult(rFile, assembly, bgAssembly, multBGCropper, cropperMulLsBuffer, silkScreenOutput.cycleList);
