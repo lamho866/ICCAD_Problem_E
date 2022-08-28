@@ -1,7 +1,7 @@
 #include "SilkscreenOutput.h"
 
-SilkScreenOutput::SilkScreenOutput(double _silkscreenlen, double _assemblygap, double _cropGap, double _addSafety, BoostPolygon &bgAssembly, vector<Cycle> &cyclePoint, BoostLineString assemblyLs, BoostMultipolygon &cropperMulLsBuffer, BoostMultipolygon &multBGCropper) :
-	silkscreenlen(_silkscreenlen), assemblygap(_assemblygap), cropGap(_cropGap), addSafety(_addSafety), bgAssemblyRef(bgAssembly), cyclePt(cyclePoint), cropperMulLsBufferRef(cropperMulLsBuffer), multBGCropperRef(multBGCropper){
+SilkScreenOutput::SilkScreenOutput(double _silkscreenlen, double _assemblygap, double _cropGap, BoostPolygon &bgAssembly, vector<Cycle> &cyclePoint, BoostLineString assemblyLs, BoostMultipolygon &cropperMulLsBuffer, BoostMultipolygon &multBGCropper) :
+	silkscreenlen(_silkscreenlen), assemblygap(_assemblygap), cropGap(_cropGap), bgAssemblyRef(bgAssembly), cyclePt(cyclePoint), cropperMulLsBufferRef(cropperMulLsBuffer), multBGCropperRef(multBGCropper){
 	findCoordMaxMin(assemblyLs, as_max_x, as_max_y, as_min_x, as_min_y);
 	makeCycleEachPoint(cyclePt, assemblygap, cycleList);
 }
@@ -39,14 +39,11 @@ void SilkScreenOutput::ResultOutput(string fileName, Polygom &assembly, BoostMul
 	}
 
 	skStCoordSetUp();
-	dropLs(canWrite, skSt, assembly.line, assembly.arc);
+	//dropLs(canWrite, skSt, assembly.line, assembly.arc);
 	classifyLegal();
 	
 	//skStCoordSafety();
 	skStCoordSetUp();
-	
-	
-	write(fileName);
 }
 
 void SilkScreenOutput::skStCoordSetUp() {
@@ -208,17 +205,64 @@ void SilkScreenOutput::addCoordSafety_X(double addedX, bool isLower) {
 	}
 }
 
+bool SilkScreenOutput::lineIsLegal(BoostLineString ls) {
+	double dist;
+	bool isCropValue = !skCropIsUnValue(ls, multBGCropperRef, cropGap, dist);
+	printf("dist: %lf\n", dist);
+	bool isAssValue = !skAssIsUnValue(ls, bgAssemblyRef, assemblygap, dist);
+	printf("dist: %lf\n", dist);
+	printf("isCropValue: %d, isAssValue: %d\n\n", isCropValue, isAssValue);
+	return isCropValue && isAssValue;
+}
+
 void SilkScreenOutput::classifyLegal() {
-	if (canWrite.size() == 0) return;
+	if (canWrite.size() == 0) {
+		canWrite.resize(skSt.size());
+		fill(canWrite.begin(), canWrite.end(), true);
+	}
 	double dist;
 	for (int i = 0; i < canWrite.size(); ++i) {
 		if (!canWrite[i]) continue;
-		BoostLineString skLineStr = skSt[i].bgLineStr();
-		bool isCropValue = !skCropIsUnValue(skLineStr, multBGCropperRef, cropGap - addSafety, dist);
-		bool isAssValue = !skAssIsUnValue(skLineStr, bgAssemblyRef, assemblygap - addSafety, dist);
-		if (isCropValue && isAssValue)
+		//legalSk.push_back(skSt[i]);
+		if (lineIsLegal(skSt[i].bgLineStr()))
 			legalSk.push_back(skSt[i]);
 		else
 			illegalSk.push_back(skSt[i]);
+	}
+}
+
+bool SilkScreenOutput::isNeedModifty() {
+	return illegalSk.size() > 0;
+}
+
+void SilkScreenOutput::curCloseIllegalSk(BoostLineString ls, vector<BoostLineString> &bgDiff, BoostLineString &curClose, double &dist) {
+	double minClose = 9999.0;
+	int idx = 0;
+	for (int i = 0; i < bgDiff.size(); ++i) {
+		double curDist = bg::distance(ls, bgDiff[i]);
+		if (curDist < minClose)
+			idx = i, minClose = curDist;
+	}
+	curClose = bgDiff[idx];
+	dist = minClose;
+}
+
+void SilkScreenOutput::modiftyTheIllegalSk(Polygom &assembly, double addSafety, vector<BoostLineString> &bgDiff) {
+	if (illegalSk.size() == 0) return;
+	double curClose = 9999.0;
+	for (int i = 0; i < illegalSk.size(); ++i) {
+		double dist;
+		BoostLineString rpSk;
+		curCloseIllegalSk(illegalSk[i].bgLineStr(), bgDiff, rpSk, dist);
+		if (dist < 0.00005 || almost_equal(dist, 0.00005))
+		{
+			vector<SilkSet> skStTemp;
+			outputSilkscreen(skStTemp, rpSk, assembly.cyclePt, cyclePt, cycleList, assemblygap + addSafety);
+			if (lineIsLegal(skStTemp[0].bgLineStr())) {
+				legalSk.push_back(skStTemp[0]);
+				illegalSk.erase(illegalSk.begin() + i);
+				--i;
+			}
+		}
 	}
 }

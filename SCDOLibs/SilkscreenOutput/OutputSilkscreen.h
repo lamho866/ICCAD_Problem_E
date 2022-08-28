@@ -28,6 +28,6 @@ void arcCombine(SilkSet &skLs);
 
 void safetyCyclePt(Cycle cycle, double assemblygap, double &x, double &y);
 
-void cHeadCheck(Cycle &c, SilkSet &sk, double assGap, double x, double y);
+void cHeadCheck(Cycle &c, SilkSet &sk, double assGap, double &x, double &y);
 
-void cTailCheck(Cycle &c, BoostLineString &ls, int &i, double assGap, double x, double y);
+void cTailCheck(Cycle &c, BoostLineString &ls, int &i, double assGap, double &x, double &y);

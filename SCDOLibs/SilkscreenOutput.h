@@ -24,12 +24,12 @@ typedef bg::model::multi_linestring<BoostLineString> BoostMultiLineString;
 
 class SilkScreenOutput {
 private:
-	void write(string &fileName);
 	void skStCoordSetUp();
 	bool isIlegealAddLine(double x1, double y1, double x2, double y2);
-
+	void curCloseIllegalSk(BoostLineString ls, vector<BoostLineString> &bgDiff, BoostLineString &curClose, double &dist);
+	bool lineIsLegal(BoostLineString ls);
 public:
-	double silkscreenlen, assemblygap, cropGap, addSafety;
+	double silkscreenlen, assemblygap, cropGap;
 	vector<BoostPolygon> cycleList;
 	vector<SilkSet> skSt , legalSk, illegalSk;
 	vector<Cycle> &cyclePt;
@@ -39,7 +39,7 @@ public:
 	BoostMultipolygon &cropperMulLsBufferRef, &multBGCropperRef;
 	BoostPolygon &bgAssemblyRef;
 
-	SilkScreenOutput(double _silkscreenlen, double _assemblygap, double _cropGap, double _addSafety, BoostPolygon &bgAssembly, vector<Cycle> &cyclePoint, BoostLineString assemblyLs, BoostMultipolygon &cropperMulLsBuffer, BoostMultipolygon &multBGCropper);
+	SilkScreenOutput(double _silkscreenlen, double _assemblygap, double _cropGap, BoostPolygon &bgAssembly, vector<Cycle> &cyclePoint, BoostLineString assemblyLs, BoostMultipolygon &cropperMulLsBuffer, BoostMultipolygon &multBGCropper);
 
 	void makeCycleEachPoint(vector<Cycle> &cyclePt, const double assemblyGap, vector<BoostPolygon> &cycleList);
 
@@ -53,5 +53,11 @@ public:
 
 	void addCoordSafetyLine(BoostLineString &addLs, vector<BoostLineString> &cropDiff);
 
+	bool isNeedModifty();
+
 	void classifyLegal();
+
+	void modiftyTheIllegalSk(Polygom &assembly, double addSafety,vector<BoostLineString> &bgDiff);
+
+	void write(string &fileName);
 };

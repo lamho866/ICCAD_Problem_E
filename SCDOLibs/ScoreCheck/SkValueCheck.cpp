@@ -9,10 +9,10 @@ bool skCropIsUnValue(BoostLineString &sk, BoostMultipolygon &multBGCropper, doub
 		curMin = min(curMin, dist);
 	}
 	minDist = curMin;
-	return minDist < cropGap;
+	return minDist < cropGap && !score_almost_equal(minDist, cropGap);
 }
 
 bool skAssIsUnValue(BoostLineString &sk, BoostPolygon &bgAssembly, double assGap, double &minDist) {
 	minDist = bg::distance(bgAssembly, sk);
-	return minDist < assGap;
+	return minDist < assGap && !score_almost_equal(minDist, assGap);
 }
