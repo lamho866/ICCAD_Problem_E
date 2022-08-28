@@ -24,10 +24,14 @@ typedef bg::model::multi_linestring<BoostLineString> BoostMultiLineString;
 
 class SilkScreenOutput {
 private:
-	void skStCoordSetUp();
+	void skStCoordSetUp(vector<SilkSet> &skStcur);
 	bool isIlegealAddLine(double x1, double y1, double x2, double y2);
 	void curCloseIllegalSk(BoostLineString ls, vector<BoostLineString> &bgDiff, BoostLineString &curClose, double &dist);
 	bool lineIsLegal(BoostLineString ls);
+
+	void addCoordSafety_Y(double addedY, bool isLower);
+	void addCoordSafety_X(double addedX, bool isLower);
+	void addCoordSafetyLine(BoostLineString &addLs, vector<BoostLineString> &cropDiff);
 public:
 	double silkscreenlen, assemblygap, cropGap;
 	vector<BoostPolygon> cycleList;
@@ -46,12 +50,6 @@ public:
 	void ResultOutput(string fileName, Polygom &assembly, BoostMultipolygon &multBGCropper, vector<BoostLineString> &bgDiff);
 
 	void skStCoordSafety();
-
-	void addCoordSafety_Y(double addedY, bool isLower);
-
-	void addCoordSafety_X(double addedX, bool isLower);
-
-	void addCoordSafetyLine(BoostLineString &addLs, vector<BoostLineString> &cropDiff);
 
 	bool isNeedModifty();
 
