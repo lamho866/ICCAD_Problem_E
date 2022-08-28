@@ -267,3 +267,4 @@ void SilkScreenOutput::modiftyTheIllegalSk(Polygom &assembly, double addSafety, 
 		}
 	}
 }
+
