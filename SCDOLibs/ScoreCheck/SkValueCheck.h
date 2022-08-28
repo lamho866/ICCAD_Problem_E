@@ -1,4 +1,5 @@
 #pragma once
+#include "../Common.h"
 #include <boost/geometry/geometry.hpp>
 
 using namespace std;

@@ -53,12 +53,6 @@ int main()
 	silkscreenlen = atof(str.substr(14).c_str());
 	input >> str;
 
-	double addGapCrop = 0.00015;
-	double addGapAss = 0.00015;
-
-	croppergap += addGapCrop;
-	assemblygap += addGapAss;
-
 	//assembly
 	while (1) {
 		input >> str;
@@ -95,9 +89,20 @@ int main()
 	buildAssemblyLine(assembly, assemblygap, multiCropperLs, croppergap, cropperMulLsBuffer, bgDiff);
 
 	assembly.cyclePtCombe();
-	SilkScreenOutput silkScreenOutput(silkscreenlen, assemblygap, croppergap, addGapAss, bgAssembly, assembly.cyclePt, assemblyLs, cropperMulLsBuffer, multBGCropper);
+	SilkScreenOutput silkScreenOutput(silkscreenlen, assemblygap, croppergap, bgAssembly, assembly.cyclePt, assemblyLs, cropperMulLsBuffer, multBGCropper);
 	silkScreenOutput.ResultOutput(rFile, assembly, multBGCropper, bgDiff);
+	
+	for (double addSafety = 0.00005; addSafety <= 0.0005; addSafety += 0.00005) {
+		if (!silkScreenOutput.isNeedModifty()) break;
+		printf("new-------------------------- %lf\n", addSafety);
+		
+		cropperMulLsBuffer.clear();
+		bgDiff.clear();
 
+		buildAssemblyLine(assembly, assemblygap + addSafety, multiCropperLs, croppergap + addSafety, cropperMulLsBuffer, bgDiff);
+		silkScreenOutput.modiftyTheIllegalSk(assembly, addSafety, bgDiff);
+	}
+	silkScreenOutput.write(rFile);
 
 	//GraphDraw
 	checkoutPutResult(rFile, assembly, bgAssembly, multBGCropper, cropperMulLsBuffer, silkScreenOutput.cycleList);
