@@ -39,7 +39,7 @@ void SilkScreenOutput::ResultOutput(string fileName, Polygom &assembly, BoostMul
 	}
 
 	skStCoordSetUp();
-	dropLs(canWrite, skSt, assembly.line, assembly.arc);
+	//dropLs(canWrite, skSt, assembly.line, assembly.arc);
 	classifyLegal();
 	
 	skStCoordSafety();
