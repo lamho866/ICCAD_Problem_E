@@ -2,7 +2,7 @@
 
 //LineArc
 void LineArc::readLine(string s) {
-	if (s[0] == 'l') {	
+	if (s[0] == 'l') {
 		line++;
 	}
 	if (s[0] == 'a') {
@@ -37,13 +37,13 @@ double ScoreCheck::score_assemblyAreaBuffer() {
 }
 
 void ScoreCheck::scoreCase1() {
-	
+
 	double sk_max_x, sk_max_y, sk_min_x, sk_min_y;
 	double as_max_x, as_max_y, as_min_x, as_min_y;
 	BoostLineString assemblyLs;
 	makeLine(assembly, assemblyLs);
 	findCoordMaxMin(assemblyLs, as_max_x, as_max_y, as_min_x, as_min_y);
-	
+
 	findCoordMaxMin(resultLs[0], sk_max_x, sk_max_y, sk_min_x, sk_min_y);
 	for (int i = 1; i < resultLs.size(); ++i) {
 		double cur_max_x, cur_max_y, cur_min_x, cur_min_y;
@@ -55,7 +55,7 @@ void ScoreCheck::scoreCase1() {
 	double assemblyArea = score_assemblyAreaBuffer();
 	double silkscreenArea = (sk_max_x - sk_min_x) * (sk_max_y - sk_min_y);
 	printf("AssmblyArea : %lf, silkscreenArea : %lf\n", assemblyArea, silkscreenArea);
-	double score = scoreCal( (2.0 - silkscreenArea / assemblyArea) , 0.25);
+	double score = scoreCal((2.0 - silkscreenArea / assemblyArea), 0.25);
 	printf("S1 = %lf\n", score);
 	printf("");
 	printf("assembly:\n");
@@ -84,7 +84,7 @@ void ScoreCheck::scoreCase2(BoostLineString &assemblyLs) {
 	printf("Silkscreen similar score\n");
 	printf("SilkscreenLen: %.5lf, assemblyOutLs: %5.lf\n", silkScreenLen, assemblyLen);
 	printf("Part A (Perimeter): %.5lf\n\n", scoreA);
-	
+
 	//Part - B
 	double lineDiff = abs(problemLA.line - resultLA.line), arcDiff = abs(problemLA.arc - resultLA.arc);
 	printf("assLine : %d, assArc : %d\n", assembly.line, assembly.arc);
@@ -119,7 +119,7 @@ void ScoreCheck::scoreCase3() {
 	vector<int> illegalIdx;
 	vector<double> illDist;
 	bool isLegal = true;
-	
+
 	double tCropper = avgCropperDistance(resultLs, multBGCropper, illegalIdx, illDist, isLegal);
 	double score = 1 - (tCropper - croppergap) * 10 / croppergap;
 	printf("-----------------------------------------\n");
@@ -132,7 +132,7 @@ void ScoreCheck::scoreCase3() {
 	else {
 		printf("illegal\n");
 		for (int i = 0; i < illegalIdx.size(); ++i)
-			printf("silkScreen[%d] : %lf\n", illegalIdx[i], illDist[i]);
+			printf("silkScreen[%d] : %lf, take4: %.4lf\n", illegalIdx[i], illDist[i], illDist[i]);
 	}
 }
 
@@ -163,7 +163,7 @@ void ScoreCheck::scoreCase4() {
 	else {
 		printf("illegal\n");
 		for (int i = 0; i < illegalIdx.size(); ++i)
-			printf("silkScreen[%d] : %lf\n", illegalIdx[i], illDist[i]);
+			printf("silkScreen[%d] : %lf, take4: %.4lf\n", illegalIdx[i], illDist[i], illDist[i]);
 	}
 }
 
@@ -289,7 +289,7 @@ void ScoreCheck::lineConnectTest() {
 void ScoreCheck::silkScreenLenTest() {
 	printf("silkScreenLenTest\n");
 	bool isLegal = true;
-	for(int i = 0; i < resultLs.size(); ++i)
+	for (int i = 0; i < resultLs.size(); ++i)
 		if (bg::length(resultLs[i]) < silkscreenlen) {
 			isLegal = false;
 			break;
