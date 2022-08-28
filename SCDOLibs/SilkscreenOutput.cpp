@@ -207,12 +207,11 @@ void SilkScreenOutput::addCoordSafety_X(double addedX, bool isLower) {
 }
 
 bool SilkScreenOutput::lineIsLegal(BoostLineString ls) {
-	double dist;
-	bool isCropValue = !skCropIsUnValue(ls, multBGCropperRef, cropGap, dist);
-	printf("dist: %lf\n", dist);
-	bool isAssValue = !skAssIsUnValue(ls, bgAssemblyRef, assemblygap, dist);
-	printf("dist: %lf\n", dist);
-	printf("isCropValue: %d, isAssValue: %d\n\n", isCropValue, isAssValue);
+	double cropDist, assDist;
+	bool isCropValue = !skCropIsUnValue(ls, multBGCropperRef, cropGap, cropDist);
+	bool isAssValue = !skAssIsUnValue(ls, bgAssemblyRef, assemblygap, assDist);
+	printf("assDist: %lf, cropDist: %lf\n", assDist, cropDist);
+	printf("isCropValue: %d, isAssValue: %d\n", isCropValue, isAssValue);
 	return isCropValue && isAssValue;
 }
 
@@ -252,19 +251,31 @@ void SilkScreenOutput::modiftyTheIllegalSk(Polygom &assembly, double addSafety, 
 	if (illegalSk.size() == 0) return;
 	double curClose = 9999.0;
 	for (int i = 0; i < illegalSk.size(); ++i) {
+		printf("illegal[%d]:\n", i);
+		printf("line: %d, arc: %d\n", illegalSk[i].line, illegalSk[i].arc);
+		bool finded = false;
 		double dist;
 		BoostLineString rpSk;
 		curCloseIllegalSk(illegalSk[i].bgLineStr(), bgDiff, rpSk, dist);
+		
+		vector<SilkSet> skStTemp;
+		outputSilkscreen(skStTemp, rpSk, assembly.cyclePt, cyclePt, cycleList, assemblygap + addSafety);
+		
 		if (dist < 0.00005 || almost_equal(dist, 0.00005))
 		{
-			vector<SilkSet> skStTemp;
-			outputSilkscreen(skStTemp, rpSk, assembly.cyclePt, cyclePt, cycleList, assemblygap + addSafety);
+			finded = true;
+			//vector<SilkSet> skStTemp;
+			//outputSilkscreen(skStTemp, rpSk, assembly.cyclePt, cyclePt, cycleList, assemblygap + addSafety);
 			if (lineIsLegal(skStTemp[0].bgLineStr())) {
 				legalSk.push_back(skStTemp[0]);
 				illegalSk.erase(illegalSk.begin() + i);
 				--i;
 			}
 		}
+		else {
+			illegalSk[i] = skStTemp[0];
+		}
+		if (finded) printf("finded\n\n");
+		else printf("minClose:%lf,  not finded\n\n", dist);
 	}
 }
-

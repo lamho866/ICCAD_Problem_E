@@ -53,6 +53,8 @@ int main()
 	silkscreenlen = atof(str.substr(14).c_str());
 	input >> str;
 
+	croppergap += 0.00001;
+	assemblygap += 0.00001;
 	//assembly
 	while (1) {
 		input >> str;
@@ -102,6 +104,7 @@ int main()
 		buildAssemblyLine(assembly, assemblygap + addSafety, multiCropperLs, croppergap + addSafety, cropperMulLsBuffer, bgDiff);
 		silkScreenOutput.modiftyTheIllegalSk(assembly, addSafety, bgDiff);
 	}
+	silkScreenOutput.skStCoordSafety();
 	silkScreenOutput.write(rFile);
 
 	//GraphDraw
@@ -118,5 +121,27 @@ int main()
 		printf("c(%.4lf, %.4lf), stDeg: %.4lf, edDeg: %.4lf\n", tempC.rx, tempC.ry, tempC.stDeg, tempC.edDeg);
 	}
 	*/
+
+
+	/*
+	ofstream resultFile(rFile + ".txt");
+	vector<SilkSet> &illegalSk = silkScreenOutput.illegalSk;
+	printf("\n\n");
+	for (int i = 0; i < illegalSk.size(); ++i) {
+		SilkSet skSt = illegalSk[i];
+		double assDist, cropDist;
+		printf("illegal[%d]:\n", i);
+		printf("line: %d, arc:%d\n", skSt.line, skSt.arc);
+		BoostLineString lineStr = skSt.bgLineStr();
+		skCropIsUnValue(lineStr, multBGCropper, croppergap, cropDist);
+		skAssIsUnValue(lineStr, bgAssembly, assemblygap, assDist);
+		printf("assDist: %lf, cropDist: %lf\n\n", assDist, cropDist);
+
+		resultFile << "silkscreen\n";
+		skSt.write(resultFile);
+	}
+	resultFile.close();
+	*/
+	
 	system("pause");
 }
