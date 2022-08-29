@@ -115,19 +115,19 @@ void assemblyBuffer(Polygom &assembly, const double assemblygap, BoostMultiLineS
 }
 
 void multiCropperBuffer(BoostMultiLineString multiCropperLs, const double croppergap, BoostMultipolygon &cropperMulLsBuffer) {
-
+	BoostMultipolygon cropBuf01, cropBuf02;
 	bg::strategy::buffer::distance_symmetric<double> cropper_dist_strategy(croppergap);
-	bg::buffer(multiCropperLs, cropperMulLsBuffer, cropper_dist_strategy, side_strategy, join_strategy, end_strategy, point_strategy);
+	bg::buffer(multiCropperLs, cropBuf01, cropper_dist_strategy, side_strategy, join_strategy, end_strategy, point_strategy);
 
-	/*
+	
 	for (int i = 0; i < multiCropperLs.size(); ++i) {
 		BoostMultipolygon tempBuffered;
 		bg::buffer(multiCropperLs[i], tempBuffered, cropper_dist_strategy, side_strategy, join_strategy, end_strategy, point_strategy);
 
 		startPointRestruct<BoostRing>(multiCropperLs[i], tempBuffered[0].outer());
-		cropperMulLsBuffer.push_back(tempBuffered[0]);
+		cropBuf02.push_back(tempBuffered[0]);
 	}
-	*/
+	bg::union_(cropBuf01, cropBuf02, cropperMulLsBuffer);
 }
 
 void connectLine(vector<BoostLineString> &bgDiff) {
