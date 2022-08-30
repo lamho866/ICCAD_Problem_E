@@ -82,7 +82,7 @@ void modifyStartPoint(T &ls, const double tagX, const double tagY) {
 }
 
 template <typename T>
-void startPointRestruct(BoostLineString &originLs, T &ls){
+void startPointRestruct(BoostLineString &originLs, T &ls) {
 	double tagX, tagY;
 	getPointData(originLs[0], tagX, tagY);
 
@@ -115,11 +115,13 @@ void assemblyBuffer(Polygom &assembly, const double assemblygap, BoostMultiLineS
 }
 
 void multiCropperBuffer(BoostMultiLineString multiCropperLs, const double croppergap, BoostMultipolygon &cropperMulLsBuffer) {
+	cropperMulLsBuffer.clear();
+
 	BoostMultipolygon cropBuf01, cropBuf02;
 	bg::strategy::buffer::distance_symmetric<double> cropper_dist_strategy(croppergap);
 	bg::buffer(multiCropperLs, cropBuf01, cropper_dist_strategy, side_strategy, join_strategy, end_strategy, point_strategy);
 
-	
+
 	for (int i = 0; i < multiCropperLs.size(); ++i) {
 		BoostMultipolygon tempBuffered;
 		bg::buffer(multiCropperLs[i], tempBuffered, cropper_dist_strategy, side_strategy, join_strategy, end_strategy, point_strategy);
@@ -152,6 +154,7 @@ void buildAssemblyLine(Polygom &assembly, const double assemblygap, BoostMultiLi
 	multiCropperBuffer(multiCropperLs, croppergap, cropperMulLsBuffer);
 
 	//difference
+	bgDiff.clear();
 	bg::difference(assemblyMultLine, cropperMulLsBuffer, bgDiff);
 	connectLine(bgDiff);
 }
