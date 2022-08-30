@@ -60,4 +60,7 @@ public:
 	void modiftyTheIllegalSk(Polygom &assembly, double addSafety,vector<BoostLineString> &bgDiff);
 
 	void write(string &fileName);
+
+	void finalLegalWay(BoostLineString outerLs);
+	bool isLegalSkValue();
 };

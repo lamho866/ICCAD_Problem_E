@@ -289,3 +289,24 @@ void SilkScreenOutput::modiftyTheIllegalSk(Polygom &assembly, double addSafety, 
 		else printf("minClose:%lf,  not finded\n\n", dist);
 	}
 }
+
+void SilkScreenOutput::finalLegalWay(BoostLineString outerLs) {
+	SilkSet sk;
+	for (int k = 0; k < outerLs.size() - 1; ++k) {
+		drawLine(outerLs, k, sk);
+	}
+	legalSk.push_back(sk);
+}
+
+bool SilkScreenOutput::isLegalSkValue() {
+	if (legalSk.size() == 0) return false;
+	skStCoordSetUp(legalSk);
+	bool cond1 = (
+		!(skSt_min_x > as_min_x) &&
+		!(skSt_max_x < as_max_x) &&
+		!(skSt_min_y > as_min_y) &&
+		!(skSt_max_y < as_max_y)
+		);
+
+	return cond1;
+}
