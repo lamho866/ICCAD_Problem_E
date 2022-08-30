@@ -51,7 +51,7 @@ void cutLineByAxis(BoostLineString ls, double tag, bool isX, bool isSecond, vect
 		tempLs.push_back(BoostPoint(x, y));
 	}
 	
-	if (isSecond) {
+	if (isSecond || temp.size() == 0) {
 		temp.push_back(tempLs);
 		return;
 	}

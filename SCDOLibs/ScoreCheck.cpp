@@ -80,6 +80,7 @@ void ScoreCheck::scoreCase2(BoostLineString &assemblyLs) {
 	double scoreA = 2 - (silkScreenLen / assemblyLen);
 
 	scoreA = scoreCal(scoreA, 0.15);
+	if (scoreA > 0.15) scoreA = 0.15;
 	printf("-----------------------------------------\n");
 	printf("Silkscreen similar score\n");
 	printf("SilkscreenLen: %.5lf, assemblyOutLs: %5.lf\n", silkScreenLen, assemblyLen);
