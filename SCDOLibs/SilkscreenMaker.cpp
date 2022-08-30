@@ -158,3 +158,20 @@ void buildAssemblyLine(Polygom &assembly, const double assemblygap, BoostMultiLi
 	bg::difference(assemblyMultLine, cropperMulLsBuffer, bgDiff);
 	connectLine(bgDiff);
 }
+
+void buildTheCombineLine(double assGap, double cropGap, BoostPolygon bgAssembly, BoostMultipolygon multBGCropper, BoostLineString &coverLs) {
+	BoostMultipolygon assBuf, cropBuf, assCrop;
+	double bufGap = max(assGap, cropGap);
+
+	bg::strategy::buffer::distance_symmetric<double> assBufStrategy(assGap);
+	boost::geometry::buffer(bgAssembly, assBuf, assBufStrategy, side_strategy, join_strategy, end_strategy, point_strategy);
+
+	bg::strategy::buffer::distance_symmetric<double> cropBufStrategy(cropGap);
+	boost::geometry::buffer(multBGCropper, cropBuf, cropBufStrategy, side_strategy, join_strategy, end_strategy, point_strategy);
+
+	bg::union_(assBuf, cropBuf, assCrop);
+
+	BoostRing &assCropOuter = assCrop[0].outer();
+	for (int i = 0; i < assCropOuter.size(); ++i)
+		coverLs.push_back(assCropOuter[i]);
+}

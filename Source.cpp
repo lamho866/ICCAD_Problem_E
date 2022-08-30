@@ -106,6 +106,15 @@ int main()
 	silkScreenOutput.skStCoordSafety();
 	silkScreenOutput.write(rFile);
 
+	//Final process way, if legalSk == 0
+	if (!silkScreenOutput.isLegalSkValue()) {
+		BoostLineString outerLs;
+		buildTheCombineLine(assemblygap, croppergap, bgAssembly, cropperMulLsBuffer, outerLs);
+		silkScreenOutput.finalLegalWay(outerLs);
+		silkScreenOutput.write(rFile);
+	}
+	
+
 	//GraphDraw
 	checkoutPutResult(rFile, assembly, bgAssembly, multBGCropper, cropperMulLsBuffer, silkScreenOutput.cycleList);
 	resultSample(rFile, assembly, bgAssembly, multBGCropper, cropperMulLsBuffer, silkScreenOutput.cycleList, bgDiff, silkscreenlen);
