@@ -29,10 +29,11 @@ private:
 	void curCloseIllegalSk(BoostLineString ls, vector<BoostLineString> &bgDiff, BoostLineString &curClose, double &dist);
 	bool lineIsLegal(BoostLineString ls);
 
-	bool canAddstraightLine(double x1, double y1, double x2, double y2);
-	bool canAddAroundCrop(SilkSet &curSkst, double added, bool isLower, bool isX);
+	bool canAddstraightLine(double x1, double y1, double x2, double y2, SilkSet &sk);
+	bool canAddAroundCrop(SilkSet &curSkst, double added, bool isLower, bool isX, SilkSet &sk);
 	void addCoordSafety(double added, bool isLower, bool isX);
-	void addCoordSafetyLine(BoostLineString &addLs, vector<BoostLineString> &cropDiff);
+	void addCoordSafetyLine(BoostLineString &addLs, vector<BoostLineString> &cropDiff, SilkSet &sk);
+	double lineWeight(SilkSet &sk);
 public:
 	double silkscreenlen, assemblygap, cropGap;
 	vector<BoostPolygon> cycleList;

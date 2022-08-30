@@ -111,34 +111,30 @@ void SilkScreenOutput::skStCoordSafety() {
 	}
 }
 
-void SilkScreenOutput::addCoordSafetyLine(BoostLineString &addLs, vector<BoostLineString> &cropDiff) {
+void SilkScreenOutput::addCoordSafetyLine(BoostLineString &addLs, vector<BoostLineString> &cropDiff, SilkSet &sk) {
 	printf("cropDiff.size(): %d\n", cropDiff.size());
 	for (int i = 0; i < cropDiff.size(); ++i) {
 		BoostLineString &cropAddLs = cropDiff[i];
 		if (bg::intersects(cropAddLs, addLs) && !bg::intersects(cropAddLs, bgAssemblyRef))
 		{
-			SilkSet sk;
 			for (int k = 0; k < cropAddLs.size() - 1; ++k) {
 				drawLine(cropAddLs, k, sk);
 			}
-			legalSk.push_back(sk);
 			return;
 		}
 	}
 }
 
-bool SilkScreenOutput::canAddstraightLine(double x1, double y1, double x2, double y2){
+bool SilkScreenOutput::canAddstraightLine(double x1, double y1, double x2, double y2, SilkSet &sk){
 	
 	if (!isIlegealAddLine(x1, y1, x2, y2)) {
-		SilkSet sk;
 		sk.addLine(x1, y1, x2, y2);
-		legalSk.push_back(sk);
 		return true;
 	}
 	return false;
 }
 
-bool SilkScreenOutput::canAddAroundCrop(SilkSet &curSkst, double added, bool isLower, bool isX) {
+bool SilkScreenOutput::canAddAroundCrop(SilkSet &curSkst, double added, bool isLower, bool isX, SilkSet &sk) {
 	Silk &head = curSkst.sk[0];
 	Silk &tail = curSkst.sk[curSkst.sk.size() - 1];
 
@@ -155,38 +151,69 @@ bool SilkScreenOutput::canAddAroundCrop(SilkSet &curSkst, double added, bool isL
 	else addLs = addLsY;
 	
 	for (int i = 0; i < cropperMulLsBufferRef.size(); ++i) {
-		if (bg::intersects(addLs, cropperMulLsBufferRef[i])) {
+		if (bg::intersects(addLs, cropperMulLsBufferRef[i]) && !bg::touches(addLs, cropperMulLsBufferRef[i])) {
 			vector<BoostLineString> cropDiff;
 
 			if(isX) makeSafetyWithCrop(cropperMulLsBufferRef[i], added, modiftPt.y1, cropDiff);
 			else makeSafetyWithCrop(cropperMulLsBufferRef[i], modiftPt.x1, added, cropDiff);
-				 
-			addCoordSafetyLine(addLs, cropDiff);
+			if (cropDiff.size() == 0) continue;
+
+			addCoordSafetyLine(addLs, cropDiff, sk);
 			return true;
 		}
 	}
 	return false;
 }
 
+double SilkScreenOutput::lineWeight(SilkSet &sk) {
+	double assDist, cropDist;
+	BoostLineString bgLineStr = sk.bgLineStr();
+	skCropIsUnValue(bgLineStr, multBGCropperRef, cropGap, cropDist);
+	skAssIsUnValue(bgLineStr, bgAssemblyRef, assemblygap, assDist);
+	return cropDist + assDist;
+}
+
 void SilkScreenOutput::addCoordSafety(double added, bool isLower, bool isX) {
+	SilkSet straightWay, aroundCropWay;
+	
 	for (int i = 0; i < legalSk.size(); ++i) {
 		SilkSet &temp = legalSk[i];
 		Silk head = temp.sk[0];
 		Silk tail = temp.sk[temp.sk.size() - 1];
 		if (isX) {
-			if(canAddstraightLine(tail.x2, tail.y2, added, tail.y2)) return;
-			if (canAddstraightLine(added, head.y1, head.x1, head.y1)) return;
+			if(canAddstraightLine(tail.x2, tail.y2, added, tail.y2, straightWay)) break;
+			if (canAddstraightLine(added, head.y1, head.x1, head.y1, straightWay)) break;
 		}
 		else 
 		{
-			if (canAddstraightLine(tail.x2, tail.y2, tail.x2, added)) return;
-			if (canAddstraightLine(head.x1, added, head.x1, head.y1)) return;
+			if (canAddstraightLine(tail.x2, tail.y2, tail.x2, added, straightWay)) break;
+			if (canAddstraightLine(head.x1, added, head.x1, head.y1, straightWay)) break;
 		}
 	}
 	
 	for (int i = 0; i < legalSk.size(); ++i) {
-		if (canAddAroundCrop(legalSk[i], added, isLower, isX)) return;
+		if (canAddAroundCrop(legalSk[i], added, isLower, isX, aroundCropWay)) break;
 	}
+	
+	if (straightWay.sk.size() == 0 && aroundCropWay.sk.size() == 0) return;
+	if (straightWay.sk.size() == 0) {
+		legalSk.push_back(aroundCropWay);
+		return;
+	}
+	if (aroundCropWay.sk.size() == 0) {
+		legalSk.push_back(straightWay);
+		return;
+	}
+	double straightW = lineWeight(straightWay);
+	double aroundCropW = lineWeight(aroundCropWay);
+	
+	if (straightW < aroundCropW || almost_equal(straightW, aroundCropW)) 
+	{
+		legalSk.push_back(straightWay);
+		return;
+	}
+	legalSk.push_back(aroundCropWay);
+
 }
 
 bool SilkScreenOutput::lineIsLegal(BoostLineString ls) {
