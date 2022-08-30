@@ -29,8 +29,9 @@ private:
 	void curCloseIllegalSk(BoostLineString ls, vector<BoostLineString> &bgDiff, BoostLineString &curClose, double &dist);
 	bool lineIsLegal(BoostLineString ls);
 
-	void addCoordSafety_Y(double addedY, bool isLower);
-	void addCoordSafety_X(double addedX, bool isLower);
+	bool canAddstraightLine(double x1, double y1, double x2, double y2);
+	bool canAddAroundCrop(SilkSet &curSkst, double added, bool isLower, bool isX);
+	void addCoordSafety(double added, bool isLower, bool isX);
 	void addCoordSafetyLine(BoostLineString &addLs, vector<BoostLineString> &cropDiff);
 public:
 	double silkscreenlen, assemblygap, cropGap;

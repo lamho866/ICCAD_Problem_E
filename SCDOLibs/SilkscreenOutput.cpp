@@ -64,6 +64,13 @@ bool SilkScreenOutput::isIlegealAddLine(double x1, double y1, double x2, double 
 	makeLine(addLsPoly, addLs);
 	//touches: Checks if two geometries have at least one touching point (tangent - non overlapping)
 	//intersects: Checks if two geometries have at least one intersection.
+	
+	printf("try add line (%lf, %lf, %lf, %lf)\n", x1, y1, x2, y2);
+	printf("cond1 bg::intersects(addLs, bgAssemblyRef): %d\n", bg::intersects(addLs, bgAssemblyRef));
+	printf("cond2 bg::intersects(addLs, multBGCropperRef): %d\n", bg::intersects(addLs, multBGCropperRef));
+	printf("cond3 bg::intersects(addLs, cropperMulLsBufferRef): %d\n", bg::intersects(addLs, cropperMulLsBufferRef));
+	printf("cond4 !bg::touches(addLs, cropperMulLsBufferRef): %d\n\n", !bg::touches(addLs, cropperMulLsBufferRef));
+
 	if (bg::intersects(addLs, bgAssemblyRef) || bg::intersects(addLs, multBGCropperRef)) return true;
 	if (bg::intersects(addLs, cropperMulLsBufferRef) && !bg::touches(addLs, cropperMulLsBufferRef)) return true;
 	return false;
@@ -82,25 +89,25 @@ void SilkScreenOutput::skStCoordSafety() {
 	if (skSt_min_x > as_min_x) {
 		printf("modify mix_x =====>\n");
 		sort(legalSk.begin(), legalSk.end(), minXCmp);
-		addCoordSafety_X(as_min_x - 0.0001, true);
+		addCoordSafety(as_min_x - 0.0001, true, true);
 	}
 	
 	if (skSt_max_x < as_max_x) {
 		printf("modify max_x =====>\n");
 		sort(legalSk.begin(), legalSk.end(), maxXCmp);
-		addCoordSafety_X(as_max_x + 0.0001, false);
+		addCoordSafety(as_max_x + 0.0001, false, true);
 	}
 	
 	if (skSt_min_y > as_min_y) {
 		printf("modify min_y =====>\n");
 		sort(legalSk.begin(), legalSk.end(), minYCmp);
-		addCoordSafety_Y(as_min_y - 0.0001, true);
+		addCoordSafety(as_min_y - 0.0001, true, false);
 	}
 
 	if (skSt_max_y < as_max_y) {
 		printf("modify max_y =====>\n");
 		sort(legalSk.begin(), legalSk.end(), maxYCmp);
-		addCoordSafety_Y(as_max_y + 0.0001, false);
+		addCoordSafety(as_max_y + 0.0001, false, false);
 	}
 }
 
@@ -120,89 +127,65 @@ void SilkScreenOutput::addCoordSafetyLine(BoostLineString &addLs, vector<BoostLi
 	}
 }
 
-void SilkScreenOutput::addCoordSafety_Y(double addedY, bool isLower) {
-	SilkSet sk;
-	for (int i = 0; i < legalSk.size(); ++i) {
-		SilkSet &temp = legalSk[i];
-		Silk head = temp.sk[0];
-		Silk tail = temp.sk[temp.sk.size() - 1];
-		//insertTail
-		if (!isIlegealAddLine(tail.x2, tail.y2, tail.x2, addedY)) {
-			//skSt[i].insertLine(static_cast<int>(temp.sk.size()), tail.x2, tail.y2, tail.x2, addedY);
-			sk.addLine(tail.x2, tail.y2, tail.x2, addedY);
-			legalSk.push_back(sk);
-			return;
-		}
-		if (!isIlegealAddLine(head.x1, addedY, head.x1, head.y1)) {
-			sk.addLine(head.x1, addedY, head.x1, head.y1);
-			legalSk.push_back(sk);
-			//skSt[i].insertLine(0, head.x1, addedY, head.x1, head.y1);
-			return;
-		}
+bool SilkScreenOutput::canAddstraightLine(double x1, double y1, double x2, double y2){
+	
+	if (!isIlegealAddLine(x1, y1, x2, y2)) {
+		SilkSet sk;
+		sk.addLine(x1, y1, x2, y2);
+		legalSk.push_back(sk);
+		return true;
 	}
-
-	printf("In_Y\n");
-
-	SilkSet &temp = legalSk[0];
-	Silk &head = temp.sk[0];
-	Silk &tail = temp.sk[temp.sk.size() - 1];
-
-	bool isHead = (head.y1 < tail.y2 == isLower);
-	Silk &modiftPt = (isHead) ? head : tail;
-
-	BoostPoint bPt1(modiftPt.x1, modiftPt.y1), bPt2(modiftPt.x2, modiftPt.y2);
-	BoostLineString addLs{ { modiftPt.x1 , modiftPt.y1 },{ modiftPt.x1, addedY } };
-
-	for (int i = 0; i < multBGCropperRef.size(); ++i) {
-		if (bg::intersects(addLs, multBGCropperRef[i])) {
-			vector<BoostLineString> cropDiff;
-			makeSafetyWithCrop(cropperMulLsBufferRef[i], modiftPt.x1, addedY, cropDiff);
-			addCoordSafetyLine(addLs, cropDiff);
-			return;
-		}
-	}
+	return false;
 }
 
-void SilkScreenOutput::addCoordSafety_X(double addedX, bool isLower) {
-	SilkSet sk;
-	for (int i = 0; i < legalSk.size(); ++i) {
-		SilkSet &temp = legalSk[i];
-		Silk head = temp.sk[0];
-		Silk tail = temp.sk[temp.sk.size() - 1];
-		//insertTail
-		if (!isIlegealAddLine(tail.x2, tail.y2, addedX, tail.y2)) {
-			//skSt[i].insertLine(static_cast<int>(temp.sk.size()), tail.x2, tail.y2, addedX, tail.y2);
-			sk.addLine(tail.x2, tail.y2, addedX, tail.y2);
-			legalSk.push_back(sk);
-			return;
-		}
-		if (!isIlegealAddLine(addedX, head.y1, head.x1, head.y1)) {
-			//skSt[i].insertLine(0, addedX, head.y1, head.x1, head.y1);
-			sk.addLine(addedX, head.y1, head.x1, head.y1);
-			legalSk.push_back(sk);
-			return;
-		}
-	}
-
-	printf("In_X\n");
-
-	SilkSet &temp = legalSk[0];
-	Silk &head = temp.sk[0];
-	Silk &tail = temp.sk[temp.sk.size() - 1];
+bool SilkScreenOutput::canAddAroundCrop(SilkSet &curSkst, double added, bool isLower, bool isX) {
+	Silk &head = curSkst.sk[0];
+	Silk &tail = curSkst.sk[curSkst.sk.size() - 1];
 
 	bool isHead = (head.x1 < tail.x2 == isLower);
 	Silk &modiftPt = (isHead) ? head : tail;
 
 	BoostPoint bPt1(modiftPt.x1, modiftPt.y1), bPt2(modiftPt.x2, modiftPt.y2);
-	BoostLineString addLs{ { modiftPt.x1 , modiftPt.y1 },{ addedX, modiftPt.y1 } };
-	for (int i = 0; i < multBGCropperRef.size(); ++i) {
-		if (bg::intersects(addLs, multBGCropperRef[i])) {
+
+	BoostLineString addLs;
+	BoostLineString addLsX{ { modiftPt.x1 , modiftPt.y1 },{ added, modiftPt.y1 } };
+	BoostLineString addLsY{ { modiftPt.x1 , modiftPt.y1 },{ modiftPt.x1, added } };
+
+	if (isX) addLs = addLsX;
+	else addLs = addLsY;
+	
+	for (int i = 0; i < cropperMulLsBufferRef.size(); ++i) {
+		if (bg::intersects(addLs, cropperMulLsBufferRef[i])) {
 			vector<BoostLineString> cropDiff;
-			printf("addedX: %lf, modiftPt.y1: %lf\n", addedX, modiftPt.y1);
-			makeSafetyWithCrop(cropperMulLsBufferRef[i], addedX, modiftPt.y1, cropDiff);
+
+			if(isX) makeSafetyWithCrop(cropperMulLsBufferRef[i], added, modiftPt.y1, cropDiff);
+			else makeSafetyWithCrop(cropperMulLsBufferRef[i], modiftPt.x1, added, cropDiff);
+				 
 			addCoordSafetyLine(addLs, cropDiff);
-			return;
+			return true;
 		}
+	}
+	return false;
+}
+
+void SilkScreenOutput::addCoordSafety(double added, bool isLower, bool isX) {
+	for (int i = 0; i < legalSk.size(); ++i) {
+		SilkSet &temp = legalSk[i];
+		Silk head = temp.sk[0];
+		Silk tail = temp.sk[temp.sk.size() - 1];
+		if (isX) {
+			if(canAddstraightLine(tail.x2, tail.y2, added, tail.y2)) return;
+			if (canAddstraightLine(added, head.y1, head.x1, head.y1)) return;
+		}
+		else 
+		{
+			if (canAddstraightLine(tail.x2, tail.y2, tail.x2, added)) return;
+			if (canAddstraightLine(head.x1, added, head.x1, head.y1)) return;
+		}
+	}
+	
+	for (int i = 0; i < legalSk.size(); ++i) {
+		if (canAddAroundCrop(legalSk[i], added, isLower, isX)) return;
 	}
 }
 
