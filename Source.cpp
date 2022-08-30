@@ -97,13 +97,12 @@ int main()
 	for (double addSafety = 0.00005; addSafety <= 0.0005; addSafety += 0.00005) {
 		if (!silkScreenOutput.isNeedModifty()) break;
 		printf("new-------------------------- %lf\n", addSafety);
-		
-		cropperMulLsBuffer.clear();
-		bgDiff.clear();
 
 		buildAssemblyLine(assembly, assemblygap + addSafety, multiCropperLs, croppergap + addSafety, cropperMulLsBuffer, bgDiff);
 		silkScreenOutput.modiftyTheIllegalSk(assembly, addSafety, bgDiff);
 	}
+
+	multiCropperBuffer(multiCropperLs, croppergap, cropperMulLsBuffer);
 	silkScreenOutput.skStCoordSafety();
 	silkScreenOutput.write(rFile);
 
