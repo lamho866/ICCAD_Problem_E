@@ -38,4 +38,4 @@ void connectLine(vector<BoostLineString> &bgDiff);
 
 void buildAssemblyLine(Polygom &assembly, const double assemblygap, BoostMultiLineString multiCropperLs, const double croppergap, BoostMultipolygon &cropperMulLsBuffer, vector<BoostLineString> &bgDiff);
 
-void buildTheCombineLine(double assGap, double cropGap, BoostPolygon bgAssembly, BoostMultipolygon multBGCropper, BoostLineString &coverLs);
+void buildTheCombineLine(double assGap, double cropGap, BoostPolygon &bgAssembly, BoostMultipolygon &multBGCropper, BoostLineString &coverLs);

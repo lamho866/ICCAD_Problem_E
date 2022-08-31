@@ -30,24 +30,29 @@ void connectLine(BoostLineString &ls, BoostLineString &addLs) {
 
 void cutLineByAxis(BoostLineString ls, double tag, bool isX, bool isSecond, vector<BoostLineString> &temp) {
 	BoostLineString tempLs;
-	double x, y;
+	double preX, preY, x, y;
 	getPointData(ls[0], x, y);
 	bool isLower = cutState(x, y, tag, isX);
+	preX = x, preY = y;
 	for (int i = 0; i < ls.size(); ++i) {
 		getPointData(ls[i], x, y);
 		if (cutState(x, y, tag, isX) != isLower)
 		{
-			if (isX) tempLs.push_back(BoostPoint(tag, y));
-			else tempLs.push_back(BoostPoint(x, tag));
+			double solX = linearSolOf_X(preX, preY, x, y, tag);
+			double solY = linearSolOf_Y(preX, preY, x, y, tag);
+
+			if (isX) tempLs.push_back(BoostPoint(tag, solY));
+			else tempLs.push_back(BoostPoint(solX, tag));
 			
 			temp.push_back(tempLs);
 			tempLs.clear();
 			
-			if (isX) tempLs.push_back(BoostPoint(tag, y));
-			else tempLs.push_back(BoostPoint(x, tag));
+			if (isX) tempLs.push_back(BoostPoint(tag, solY));
+			else tempLs.push_back(BoostPoint(solX, tag));
 
 			isLower = !isLower;
 		}
+		preX = x, preY = y;
 		tempLs.push_back(BoostPoint(x, y));
 	}
 	
@@ -75,3 +80,14 @@ void cutCrop(double tag, bool isX, bool isSecond,vector<BoostLineString> &cropDi
 		cutLineByAxis(cropDiff[i], tag, isX, isSecond, temp);
 	cropDiff = temp;
 }
+
+double linearSolOf_X(double x1, double y1, double x2, double y2, double y) {
+	if (almost_equal((y2 - y1), 0.0000)) return x1;
+	return (y - y1) * (x2 - x1) / (y2 - y1) + x1;
+}
+
+double linearSolOf_Y(double x1, double y1, double x2, double y2, double x) {
+	if (almost_equal((x2 - x1), 0.0000)) return y1;
+	return (y2 - y1) * (x - x1) / (x2 - x1) + y1;
+}
+

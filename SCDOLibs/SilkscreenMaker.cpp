@@ -159,19 +159,32 @@ void buildAssemblyLine(Polygom &assembly, const double assemblygap, BoostMultiLi
 	connectLine(bgDiff);
 }
 
-void buildTheCombineLine(double assGap, double cropGap, BoostPolygon bgAssembly, BoostMultipolygon multBGCropper, BoostLineString &coverLs) {
+bool cmpBoostArea (const BoostPolygon a, const BoostPolygon b) {
+	return bg::area(a) > bg::area(b);
+}
+
+void buildTheCombineLine(double assGap, double cropGap, BoostPolygon &bgAssembly, BoostMultipolygon &multBGCropper, BoostLineString &coverLs) {
 	BoostMultipolygon assBuf, cropBuf, assCrop;
-	double bufGap = max(assGap, cropGap);
+	//double bufGap = max(assGap, cropGap);
 
 	bg::strategy::buffer::distance_symmetric<double> assBufStrategy(assGap);
 	boost::geometry::buffer(bgAssembly, assBuf, assBufStrategy, side_strategy, join_strategy, end_strategy, point_strategy);
 
 	bg::strategy::buffer::distance_symmetric<double> cropBufStrategy(cropGap);
 	boost::geometry::buffer(multBGCropper, cropBuf, cropBufStrategy, side_strategy, join_strategy, end_strategy, point_strategy);
-
+	printf("assGap: %lf, cropGap: %lf\n", assGap, cropGap);
 	bg::union_(assBuf, cropBuf, assCrop);
+	
+	sort(assCrop.begin(), assCrop.end(), cmpBoostArea);
+	for (int i = 0; i < assCrop.size(); ++i) {
+		BoostPolygon &curAssCrop = assCrop[i];
+		{
+			BoostRing &assCropOuter = curAssCrop.outer();
 
-	BoostRing &assCropOuter = assCrop[0].outer();
-	for (int i = 0; i < assCropOuter.size(); ++i)
-		coverLs.push_back(assCropOuter[i]);
+			for (int j = 0; j < assCropOuter.size(); ++j)
+				coverLs.push_back(assCropOuter[j]);
+			
+			return;
+		}
+	}
 }
