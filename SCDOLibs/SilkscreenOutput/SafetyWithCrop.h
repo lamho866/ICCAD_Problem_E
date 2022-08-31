@@ -25,3 +25,7 @@ bool cutState(double x, double y, double tag, double isX);
 void cutLineByAxis(BoostLineString ls, double tag, bool isX , bool isSecond, vector<BoostLineString> &temp);
 
 void cutCrop(double tag, bool isX, bool isSecond, vector<BoostLineString> &cropDiff);
+
+double linearSolOf_Y(double x1, double y1, double x2, double y2, double x);
+
+double linearSolOf_X(double x1, double y1, double x2, double y2, double y);

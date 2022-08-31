@@ -118,7 +118,8 @@ bool collinear(BoostPoint pt1, BoostPoint pt2, BoostPoint pt3)
 		x2 * (y3 - y1) +
 		x3 * (y1 - y2);
 
-	return abs(a) <= std::numeric_limits<double>::epsilon();
+	return almost_equal(abs(a), std::numeric_limits<double>::epsilon());
+	//return abs(a) <= std::numeric_limits<double>::epsilon();
 }
 
 void drawLine(BoostLineString &ls, int &i, SilkSet &sk) {

@@ -141,17 +141,23 @@ bool SilkScreenOutput::canAddAroundCrop(SilkSet &curSkst, double added, bool isL
 	bool isHead = (head.x1 < tail.x2 == isLower);
 	Silk &modiftPt = (isHead) ? head : tail;
 
-	BoostPoint bPt1(modiftPt.x1, modiftPt.y1), bPt2(modiftPt.x2, modiftPt.y2);
+	BoostPoint ptCheck;
+	BoostPoint ptX(added, modiftPt.y1), ptY(modiftPt.x1, added);
 
 	BoostLineString addLs;
 	BoostLineString addLsX{ { modiftPt.x1 , modiftPt.y1 },{ added, modiftPt.y1 } };
 	BoostLineString addLsY{ { modiftPt.x1 , modiftPt.y1 },{ modiftPt.x1, added } };
+	
 
-	if (isX) addLs = addLsX;
-	else addLs = addLsY;
+
+	if (isX) addLs = addLsX, ptCheck = ptX;
+	else addLs = addLsY, ptCheck = ptY;
 	
 	for (int i = 0; i < cropperMulLsBufferRef.size(); ++i) {
-		if (bg::intersects(addLs, cropperMulLsBufferRef[i]) && !bg::touches(addLs, cropperMulLsBufferRef[i])) {
+		if (bg::intersects(addLs, cropperMulLsBufferRef[i]) && 
+			!bg::touches(addLs, cropperMulLsBufferRef[i]) && 
+			bg::covered_by(ptCheck, cropperMulLsBufferRef[i].outer())
+			) {
 			vector<BoostLineString> cropDiff;
 
 			if(isX) makeSafetyWithCrop(cropperMulLsBufferRef[i], added, modiftPt.y1, cropDiff);

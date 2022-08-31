@@ -92,6 +92,7 @@ int main()
 
 	assembly.cyclePtCombe();
 	SilkScreenOutput silkScreenOutput(silkscreenlen, assemblygap, croppergap, bgAssembly, assembly.cyclePt, assemblyLs, cropperMulLsBuffer, multBGCropper);
+	
 	silkScreenOutput.ResultOutput(rFile, assembly, multBGCropper, bgDiff);
 	
 	for (double addSafety = 0.00005; addSafety <= 0.0005; addSafety += 0.00005) {
@@ -102,17 +103,23 @@ int main()
 		silkScreenOutput.modiftyTheIllegalSk(assembly, addSafety, bgDiff);
 	}
 
-	multiCropperBuffer(multiCropperLs, croppergap, cropperMulLsBuffer);
+	multiCropperBuffer(multiCropperLs, croppergap + 0.00005, cropperMulLsBuffer);
 	silkScreenOutput.skStCoordSafety();
 	silkScreenOutput.write(rFile);
 
 	//Final process way, if legalSk == 0
 	if (!silkScreenOutput.isLegalSkValue()) {
+		printf("\n+===============------------------------===============+\n");
+		printf("+=====----------Using Final Process!!!!!----------=====+\n");
+		printf("+===============------------------------===============+\n\n");
 		BoostLineString outerLs;
 		buildTheCombineLine(assemblygap, croppergap, bgAssembly, cropperMulLsBuffer, outerLs);
-		silkScreenOutput.finalLegalWay(outerLs);
-		silkScreenOutput.write(rFile);
+		if (outerLs.size() != 0) {
+			silkScreenOutput.finalLegalWay(outerLs);
+			silkScreenOutput.write(rFile);
+		}
 	}
+	
 	
 
 	//GraphDraw
