@@ -136,7 +136,7 @@ void drawLine(BoostLineString &ls, int &i, SilkSet &sk) {
 
 void arcCombine(SilkSet &skLs) {
 	for (int i = 0; i < skLs.sk.size() - 1; ++i) {
-		if (!skLs.sk[i].isLine && !skLs.sk[i].isLine &&
+		if (!skLs.sk[i].isLine && !skLs.sk[i + 1].isLine &&
 			almost_equal(skLs.sk[i].rx, skLs.sk[i + 1].rx) && almost_equal(skLs.sk[i].ry, skLs.sk[i + 1].ry) &&
 			almost_equal(skLs.sk[i].x2, skLs.sk[i + 1].x1) && almost_equal(skLs.sk[i].y2, skLs.sk[i + 1].y1)) {
 			skLs.sk[i].x2 = skLs.sk[i + 1].x2;
