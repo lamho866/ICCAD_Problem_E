@@ -173,11 +173,22 @@ void buildTheCombineLine(double assGap, double cropGap, BoostPolygon &bgAssembly
 	bg::strategy::buffer::distance_symmetric<double> cropBufStrategy(cropGap);
 	boost::geometry::buffer(multBGCropper, cropBuf, cropBufStrategy, side_strategy, join_strategy, end_strategy, point_strategy);
 	printf("assGap: %lf, cropGap: %lf\n", assGap, cropGap);
-	bg::union_(assBuf, cropBuf, assCrop);
 	
+	
+	//sort(assCrop.begin(), assCrop.end(), cmpBoostArea);
+	bool assInCropper = false;
+	for(int i = 0; i < cropBuf.size(); ++i)
+		if (bg::covered_by(bgAssembly.outer(), cropBuf[i].outer())) {
+			assInCropper = true;
+			break;
+		}
+	if (assInCropper) assCrop = cropBuf;
+	else bg::union_(assBuf, cropBuf, assCrop);
+
 	sort(assCrop.begin(), assCrop.end(), cmpBoostArea);
 	for (int i = 0; i < assCrop.size(); ++i) {
 		BoostPolygon &curAssCrop = assCrop[i];
+		if(bg::covered_by(bgAssembly.outer(), curAssCrop.outer()))
 		{
 			BoostRing &assCropOuter = curAssCrop.outer();
 
