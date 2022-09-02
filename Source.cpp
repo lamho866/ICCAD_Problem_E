@@ -90,12 +90,13 @@ int main()
 	BoostMultipolygon cropperMulLsBuffer;
 	buildAssemblyLine(assembly, assemblygap, multiCropperLs, croppergap, cropperMulLsBuffer, bgDiff);
 
+	printf("\n\n+------------------------------------------------------------------+\n\n");
 	assembly.cyclePtCombe();
 	SilkScreenOutput silkScreenOutput(silkscreenlen, assemblygap, croppergap, bgAssembly, assembly.cyclePt, assemblyLs, cropperMulLsBuffer, multBGCropper);
 	
 	silkScreenOutput.ResultOutput(rFile, assembly, multBGCropper, bgDiff);
-	
-	for (double addSafety = 0.00005; addSafety <= 0.0005; addSafety += 0.00005) {
+	printf("SilkScreen CanWrite Size: %d\n", silkScreenOutput.canWrite.size());
+	for (double addSafety = 0.00005; addSafety <= 0.00100; addSafety += 0.00005) {
 		if (!silkScreenOutput.isNeedModifty()) break;
 		printf("new-------------------------- %lf\n", addSafety);
 
@@ -104,6 +105,14 @@ int main()
 	}
 
 	multiCropperBuffer(multiCropperLs, croppergap + 0.00005, cropperMulLsBuffer);
+	
+	/*if (silkScreenOutput.legalSk.size() == 0) {
+		printf("legalSilkscreen is 0!!!!!!\n");
+		silkScreenOutput.legalSk = silkScreenOutput.illegalSk;
+	}*/
+	/*for (int i = 0; i < silkScreenOutput.illegalSk.size(); ++i)
+		silkScreenOutput.legalSk.push_back(silkScreenOutput.illegalSk[i]);
+		*/
 	silkScreenOutput.skStCoordSafety();
 	silkScreenOutput.write(rFile);
 
@@ -120,8 +129,6 @@ int main()
 		}
 	}
 	
-	
-
 	//GraphDraw
 	checkoutPutResult(rFile, assembly, bgAssembly, multBGCropper, cropperMulLsBuffer, silkScreenOutput.cycleList);
 	resultSample(rFile, assembly, bgAssembly, multBGCropper, cropperMulLsBuffer, silkScreenOutput.cycleList, bgDiff, silkscreenlen);
@@ -158,5 +165,6 @@ int main()
 	resultFile.close();
 	*/
 	
+
 	system("pause");
 }

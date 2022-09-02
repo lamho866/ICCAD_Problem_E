@@ -60,6 +60,7 @@ void modifyStartPoint(T &ls, const double tagX, const double tagY) {
 		double x, y;
 		getPointData(ls[i], x, y);
 		if (almost_equal(x, tagX) && almost_equal(y, tagY)) {
+			//printf("modifyStartPoint!\n");
 			double x1, x2, x3, x4, y1, y2, y3, y4, resX, resY;
 			getPointData(ls[(i - 2 + lsSize) % lsSize], x1, y1);
 			getPointData(ls[(i - 1 + lsSize) % lsSize], x2, y2);
@@ -85,32 +86,47 @@ template <typename T>
 void startPointRestruct(BoostLineString &originLs, T &ls) {
 	double tagX, tagY;
 	getPointData(originLs[0], tagX, tagY);
+	//printf("stPoint:(%lf, %lf)\n", tagX, tagY);
+	BoostPoint pt(tagX, tagY);
+
+	if (!bg::covered_by(pt, ls)) {
+		for (int i = 0; i < ls.size(); ++i) {
+			if (bg::covered_by(ls[i], originLs)) {
+				getPointData(ls[i], tagX, tagY);
+				//printf("New points: (%lf, %lf)\n", tagX, tagY);
+				break;
+			}
+		}
+		//printf("not Find touches point\n");
+	}
 
 	int startPtCnt = countStartPoint<T>(ls, tagX, tagY);
 	while (startPtCnt > 1)
 		removeConnectPoint<T>(ls, tagX, tagY), startPtCnt--;
-
 	modifyStartPoint<T>(ls, tagX, tagY);
+	//printf("originLs & ls : %d\n\n", bg::intersects(originLs, ls));
 }
 
 void assemblyBuffer(Polygom &assembly, const double assemblygap, BoostMultiLineString &assemblyMultLine) {
 	BoostLineString assemblyLs, resultLs;
 	makeLine(assembly, assemblyLs);
-	double tagX, tagY;
-	getPointData(assemblyLs[0], tagX, tagY);
 
 	//make the outline
 	BoostMultipolygon assemblyOutLs;
 	bg::strategy::buffer::distance_symmetric<double> assemblygap_dist_strategy(assemblygap);
 	boost::geometry::buffer(assemblyLs, assemblyOutLs, assemblygap_dist_strategy, side_strategy, join_strategy, end_strategy, point_strategy);
 
+	/*
 	assert(assemblyOutLs.size() == 1);
 	string strLs = boost::lexical_cast<std::string>(bg::wkt(assemblyOutLs.front()));
 	string outLineStrLs = strLs.substr(9, strLs.find("),(") - 9);
 
 	bg::read_wkt("LINESTRING(" + outLineStrLs + ")", resultLs);
-
-	startPointRestruct<BoostLineString>(assemblyLs, resultLs);
+	*/
+	startPointRestruct<BoostRing>(assemblyLs, assemblyOutLs[0].outer());
+	BoostRing &assOuter = assemblyOutLs[0].outer();
+	for (int i = 0; i < assOuter.size(); ++i)
+		resultLs.push_back(assOuter[i]);
 	assemblyMultLine.push_back(resultLs);
 }
 
@@ -150,7 +166,9 @@ void connectLine(vector<BoostLineString> &bgDiff) {
 
 void buildAssemblyLine(Polygom &assembly, const double assemblygap, BoostMultiLineString multiCropperLs, const double croppergap, BoostMultipolygon &cropperMulLsBuffer, vector<BoostLineString> &bgDiff) {
 	BoostMultiLineString assemblyMultLine;
+	//printf("assemblyBuffer:\n\n");
 	assemblyBuffer(assembly, assemblygap, assemblyMultLine);
+	//printf("multiCropperBuffer:\n");
 	multiCropperBuffer(multiCropperLs, croppergap, cropperMulLsBuffer);
 
 	//difference
