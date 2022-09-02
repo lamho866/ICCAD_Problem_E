@@ -127,7 +127,8 @@ void SilkScreenOutput::addCoordSafetyLine(BoostLineString &addLs, vector<BoostLi
 
 bool SilkScreenOutput::canAddstraightLine(double x1, double y1, double x2, double y2, SilkSet &sk){
 	
-	if (!isIlegealAddLine(x1, y1, x2, y2)) {
+	BoostLineString addLs{ {x1, y1}, {x2, y2} };
+	if (!isIlegealAddLine(x1, y1, x2, y2) && lineIsLegal(addLs)) {
 		sk.addLine(x1, y1, x2, y2);
 		return true;
 	}
@@ -305,7 +306,10 @@ void SilkScreenOutput::finalLegalWay(BoostLineString outerLs) {
 }
 
 bool SilkScreenOutput::isLegalSkValue() {
-	if (legalSk.size() == 0) return false;
+	if (legalSk.size() == 0) {
+		printf("Error: legalSk is 0!!!!\n");
+		return false;
+	}
 	skStCoordSetUp(legalSk);
 	bool cond1 = (
 		!(skSt_min_x > as_min_x) &&
@@ -313,6 +317,6 @@ bool SilkScreenOutput::isLegalSkValue() {
 		!(skSt_min_y > as_min_y) &&
 		!(skSt_max_y < as_max_y)
 		);
-
-	return cond1;
+	if (!cond1) printf("Error: Not Large Enough!!!!\n");;
+ 	return cond1;
 }

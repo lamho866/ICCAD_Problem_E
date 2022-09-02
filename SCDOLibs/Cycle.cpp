@@ -25,13 +25,17 @@ Cycle& Cycle::operator=(const Cycle& c) {
 
 double Cycle::dist(double x, double y) {
 	return sqrt((x - rx) * (x - rx) + (y - ry) * (y - ry));
+	//return bg::distance(BoostPoint(x, y), BoostPoint(rx, ry));
 }
 
 double Cycle::coordDeg(double x, double y) {
 	x -= rx, y -= ry;
 	//OA (0.0, r), OB(x, y)
 	double dotProduct = y * r;
+	//printf("dotProduct: %lf\n", dotProduct);
+	//printf("(r * dist(x + rx, y + ry): %lf\n", (r * dist(x + rx, y + ry)));
 	double angle = dotProduct / (r * dist(x + rx, y + ry));
+	//printf("angle: %lf\n", angle);
 	angle = acos(angle) * 180.0 / PI;
 	
 	if (x < 0.0) return 360.0 - angle;
