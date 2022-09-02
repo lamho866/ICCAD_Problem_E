@@ -1,6 +1,5 @@
 #pragma once
 #include "Cycle.h"
-#include "Silk.h"
 #include <vector>
 #include <string>
 using namespace std;
@@ -11,7 +10,6 @@ private:
 	bool isConnect(Cycle a, Cycle b);
 public:
 	vector<Cycle> cyclePt;
-	vector<Silk> sk;
 	string shape;
 	int line, arc;
 	void addLine(string &s);
