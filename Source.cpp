@@ -117,7 +117,7 @@ int main()
 	silkScreenOutput.write(rFile);
 
 	//Final process way, if legalSk == 0
-	if (!silkScreenOutput.isLegalSkValue() && false) {
+	if (!silkScreenOutput.isLegalSkValue()) {
 		printf("\n+===============------------------------===============+\n");
 		printf("+=====----------Using Final Process!!!!!----------=====+\n");
 		printf("+===============------------------------===============+\n\n");
