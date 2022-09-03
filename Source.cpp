@@ -165,11 +165,5 @@ int main()
 	}
 	resultFile.close();
 	*/
-	Cycle c1(19.2232, 22.5935, 17.9526, 13.6079, 18.4972, 18.1135, true);
-	printf("dist: %lf\n", c1.dist(19.2232, 22.5935));
-	printf("dist: %lf\n", c1.dist(17.9526, 13.6079));
-	Cycle c2(17.9526, 13.6079, 15.8758, 8.0877, 15.9137, 11.2242, true);
-	printf("dist: %lf\n", c2.dist(17.9526, 13.6079));
-	printf("dist: %lf\n", c2.dist(15.8758, 8.0877));
 	system("pause");
 }
