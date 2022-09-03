@@ -42,6 +42,7 @@ public:
 	vector<bool> canWrite;
 	double as_max_x, as_max_y, as_min_x, as_min_y;
 	double skSt_max_x, skSt_max_y, skSt_min_x, skSt_min_y;
+	double rAdoptRange;
 	BoostMultipolygon &cropperMulLsBufferRef, &multBGCropperRef;
 	BoostPolygon &bgAssemblyRef;
 

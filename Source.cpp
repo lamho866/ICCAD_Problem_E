@@ -96,7 +96,7 @@ int main()
 	
 	silkScreenOutput.ResultOutput(rFile, assembly, multBGCropper, bgDiff);
 	printf("SilkScreen CanWrite Size: %d\n", silkScreenOutput.canWrite.size());
-	for (double addSafety = 0.00005; addSafety <= 0.00100; addSafety += 0.00005) {
+	for (double addSafety = 0.00005; addSafety <= 0.01000; addSafety += 0.00005) {
 		if (!silkScreenOutput.isNeedModifty()) break;
 		printf("new-------------------------- %lf\n", addSafety);
 
@@ -105,9 +105,10 @@ int main()
 	}
 
 	multiCropperBuffer(multiCropperLs, croppergap + 0.00005, cropperMulLsBuffer);
-	
-	/*if (silkScreenOutput.legalSk.size() == 0) {
+	/*
+	if (silkScreenOutput.legalSk.size() == 0) {
 		printf("legalSilkscreen is 0!!!!!!\n");
+		printf("=====> use illegalSk <=======\n");
 		silkScreenOutput.legalSk = silkScreenOutput.illegalSk;
 	}*/
 	/*for (int i = 0; i < silkScreenOutput.illegalSk.size(); ++i)
@@ -164,7 +165,11 @@ int main()
 	}
 	resultFile.close();
 	*/
-	
-
+	Cycle c1(19.2232, 22.5935, 17.9526, 13.6079, 18.4972, 18.1135, true);
+	printf("dist: %lf\n", c1.dist(19.2232, 22.5935));
+	printf("dist: %lf\n", c1.dist(17.9526, 13.6079));
+	Cycle c2(17.9526, 13.6079, 15.8758, 8.0877, 15.9137, 11.2242, true);
+	printf("dist: %lf\n", c2.dist(17.9526, 13.6079));
+	printf("dist: %lf\n", c2.dist(15.8758, 8.0877));
 	system("pause");
 }

@@ -16,11 +16,11 @@ typedef bg::model::polygon<BoostPoint> BoostPolygon;
 typedef bg::model::multi_polygon<BoostPolygon> BoostMultipolygon;
 typedef bg::model::multi_linestring<BoostLineString> BoostMultiLineString;
 
-void outputSilkscreen(vector<SilkSet> &skSt, BoostLineString &ls, vector<Cycle> assemblyCycleList, vector<Cycle> &cyclePt, vector<BoostPolygon> &cycleList, double assemblygap);
+void outputSilkscreen(vector<SilkSet> &skSt, BoostLineString &ls, vector<Cycle> assemblyCycleList, vector<Cycle> &cyclePt, vector<BoostPolygon> &cycleList, double assemblygap, double rAdoptRange);
 
 void drawLine(BoostLineString &ls, int &i, SilkSet &sk);
 
-void intputCycle(BoostPolygon cyclePolygon, Cycle cycle, BoostLineString &ls, int cIdx, int &i, SilkSet &sk, double assemblygap);
+void intputCycle(BoostPolygon cyclePolygon, Cycle cycle, BoostLineString &ls, int cIdx, int &i, SilkSet &sk, double assemblygap, double rAdoptRange);
 
 bool collinear(BoostPoint pt1, BoostPoint pt2, BoostPoint pt3);
 
@@ -31,3 +31,5 @@ void safetyCyclePt(Cycle cycle, double assemblygap, double &x, double &y);
 void cHeadCheck(Cycle &c, SilkSet &sk, double assGap, double &x, double &y);
 
 void cTailCheck(Cycle &c, BoostLineString &ls, int &i, double assGap, double &x, double &y);
+
+bool is2PtInRange(BoostPoint a, BoostPoint b, Cycle &c, BoostPolygon &bgC);
