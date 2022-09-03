@@ -18,7 +18,7 @@ void outputSilkscreen(vector<SilkSet> &skSt, BoostLineString &ls, vector<Cycle> 
 		getPointData(ls[i], x, y);
 		getPointData(ls[i + 1], nxtX, nxtY);
 		bool inCycle = false;
-		for (int j = 0; j <= cSize; ++j, cIdx = (cIdx + 1) % cSize) {
+		for (int j = 0; j < cSize; ++j, cIdx = (cIdx + 1) % cSize) {
 			//printf("cIdx: %d\n", cIdx);
 			//printf("sk[%d] : (%.4lf, %.4lf) deg: %.5lf inRage: %d, withIn: %d\n", i, x, y, cyclePt[cIdx].coordDeg(x, y), cyclePt[cIdx].degInRange(x, y), bg::within(ls[i], cycleList[cIdx]));
 			//printf("sk[%d] : (%.4lf, %.4lf) deg: %.5lf inRage: %d, withIn: %d\n\n", i + 1, nxtX, nxtY, cyclePt[cIdx].coordDeg(nxtX, nxtY), cyclePt[cIdx].degInRange(nxtX, nxtY), bg::within(ls[i + 1], cycleList[cIdx]));
