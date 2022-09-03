@@ -4,6 +4,7 @@ SilkScreenOutput::SilkScreenOutput(double _silkscreenlen, double _assemblygap, d
 	silkscreenlen(_silkscreenlen), assemblygap(_assemblygap), cropGap(_cropGap), bgAssemblyRef(bgAssembly), cyclePt(cyclePoint), cropperMulLsBufferRef(cropperMulLsBuffer), multBGCropperRef(multBGCropper){
 	findCoordMaxMin(assemblyLs, as_max_x, as_max_y, as_min_x, as_min_y);
 	makeCycleEachPoint(cyclePt, assemblygap, cycleList);
+	rAdoptRange = max(_assemblygap / 100.0, 0.0001);
 }
 
 void SilkScreenOutput::write(string &fileName) {
@@ -34,7 +35,7 @@ void SilkScreenOutput::makeCycleEachPoint(vector<Cycle> &cyclePt, const double a
 void SilkScreenOutput::ResultOutput(string fileName, Polygom &assembly, BoostMultipolygon &multBGCropper, vector<BoostLineString> &bgDiff) {
 	for (int i = 0; i < bgDiff.size(); ++i) {
 		if (bg::within(bgDiff[i], multBGCropper) == false && isLargerEnough(bgDiff[i], silkscreenlen)) {
-			outputSilkscreen(skSt, bgDiff[i], assembly.cyclePt, cyclePt, cycleList, assemblygap);
+			outputSilkscreen(skSt, bgDiff[i], assembly.cyclePt, cyclePt, cycleList, assemblygap, rAdoptRange);
 		}
 	}
 
@@ -276,7 +277,7 @@ void SilkScreenOutput::modiftyTheIllegalSk(Polygom &assembly, double addSafety, 
 		curCloseIllegalSk(illegalSk[i].bgLineStr(), bgDiff, rpSk, dist);
 		
 		vector<SilkSet> skStTemp;
-		outputSilkscreen(skStTemp, rpSk, assembly.cyclePt, cyclePt, cycleList, assemblygap + addSafety);
+		outputSilkscreen(skStTemp, rpSk, assembly.cyclePt, cyclePt, cycleList, assemblygap + addSafety, rAdoptRange);
 		
 		if (dist < 0.00005 || almost_equal(dist, 0.00005))
 		{
@@ -299,6 +300,7 @@ void SilkScreenOutput::modiftyTheIllegalSk(Polygom &assembly, double addSafety, 
 
 void SilkScreenOutput::finalLegalWay(BoostLineString outerLs) {
 	SilkSet sk;
+	legalSk.clear();
 	for (int k = 0; k < outerLs.size() - 1; ++k) {
 		drawLine(outerLs, k, sk);
 	}
