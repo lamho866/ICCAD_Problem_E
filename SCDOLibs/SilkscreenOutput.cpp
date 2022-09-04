@@ -106,7 +106,7 @@ void SilkScreenOutput::skStCoordSafety() {
 	}
 
 	if (skSt_max_y < as_max_y) {
-		printf("modify max_y =====>\n");
+		//printf("modify max_y =====>\n");
 		sort(legalSk.begin(), legalSk.end(), maxYCmp);
 		addCoordSafety(as_max_y + 0.0001, false, false);
 	}
@@ -141,14 +141,16 @@ bool SilkScreenOutput::canAddAroundCrop(SilkSet &curSkst, double added, bool isL
 	Silk &head = curSkst.sk[0];
 	Silk &tail = curSkst.sk[curSkst.sk.size() - 1];
 
-	bool isHead = (head.x1 < tail.x2 == isLower);
-	Silk &modiftPt = (isHead) ? head : tail;
+	
 
 	BoostPoint ptCheck;
 	double ptX, ptY;
 	BoostLineString addLs;
 
 	if (isX) {
+		bool isHead = (head.x1 < tail.x2 == isLower);
+		Silk &modiftPt = (isHead) ? head : tail;
+
 		if ((modiftPt.x1 < modiftPt.x2) == isLower) ptX = modiftPt.x1, ptY = modiftPt.y1;
 		else ptX = modiftPt.x2, ptY = modiftPt.y2;
 		ptCheck = BoostPoint(added, ptY);
@@ -159,10 +161,12 @@ bool SilkScreenOutput::canAddAroundCrop(SilkSet &curSkst, double added, bool isL
 			addLs = BoostLineString{ { ptX - 0.0001, ptY },{ added, ptY } };
 	}
 	else {
+		bool isHead = (head.y1 < tail.y2 == isLower);
+		Silk &modiftPt = (isHead) ? head : tail;
+
 		if ((modiftPt.y1 < modiftPt.y2) == isLower) ptX = modiftPt.x1, ptY = modiftPt.y1;
 		else ptX = modiftPt.x2, ptY = modiftPt.y2;
 		ptCheck = BoostPoint(ptX, added);
-
 		if (isLower)
 			addLs = BoostLineString{ { ptX, ptY + 0.0001 },{ ptX, added } };
 		else
@@ -170,14 +174,15 @@ bool SilkScreenOutput::canAddAroundCrop(SilkSet &curSkst, double added, bool isL
 	}
 	
 	for (int i = 0; i < cropperMulLsBufferRef.size(); ++i) {
+		//printf("[%d] ==> (%d, %d, %d)\n",i ,bg::intersects(addLs, cropperMulLsBufferRef[i]), !bg::touches(addLs, cropperMulLsBufferRef[i]), bg::covered_by(ptCheck, cropperMulLsBufferRef[i].outer()));
 		if (bg::intersects(addLs, cropperMulLsBufferRef[i]) && 
 			!bg::touches(addLs, cropperMulLsBufferRef[i]) && 
 			bg::covered_by(ptCheck, cropperMulLsBufferRef[i].outer())
 			) {
 			vector<BoostLineString> cropDiff;
-
-			if(isX) makeSafetyWithCrop(cropperMulLsBufferRef[i], added, modiftPt.y1, cropDiff);
-			else makeSafetyWithCrop(cropperMulLsBufferRef[i], modiftPt.x1, added, cropDiff);
+			//printf("IN\n");
+			if(isX) makeSafetyWithCrop(cropperMulLsBufferRef[i], added, ptY, cropDiff);
+			else makeSafetyWithCrop(cropperMulLsBufferRef[i], ptX, added, cropDiff);
 			if (cropDiff.size() == 0) continue;
 
 			addCoordSafetyLine(addLs, cropDiff, sk);
@@ -185,7 +190,7 @@ bool SilkScreenOutput::canAddAroundCrop(SilkSet &curSkst, double added, bool isL
 				return true;
 		}
 	}
-	//printf("Using final addCropper way!!\n");
+	printf("Using final addCropper way!!\n");
 	int minIdx = 0;
 	double minDist = bg::distance(ptCheck, cropperMulLsBufferRef[0]);
 	for (int i = 1; i < cropperMulLsBufferRef.size(); ++i) {
