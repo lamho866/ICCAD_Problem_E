@@ -88,25 +88,25 @@ void SilkScreenOutput::skStCoordSafety() {
 	skStCoordSetUp(legalSk);
 
 	if (skSt_min_x > as_min_x) {
-		//printf("modify mix_x =====>\n");
+		printf("modify mix_x =====>\n");
 		sort(legalSk.begin(), legalSk.end(), minXCmp);
 		addCoordSafety(as_min_x - 0.0001, true, true);
 	}
 	
 	if (skSt_max_x < as_max_x) {
-		//printf("modify max_x =====>\n");
+		printf("modify max_x =====>\n");
 		sort(legalSk.begin(), legalSk.end(), maxXCmp);
 		addCoordSafety(as_max_x + 0.0001, false, true);
 	}
 	
 	if (skSt_min_y > as_min_y) {
-		//printf("modify min_y =====>\n");
+		printf("modify min_y =====>\n");
 		sort(legalSk.begin(), legalSk.end(), minYCmp);
 		addCoordSafety(as_min_y - 0.0001, true, false);
 	}
 
 	if (skSt_max_y < as_max_y) {
-		//printf("modify max_y =====>\n");
+		printf("modify max_y =====>\n");
 		sort(legalSk.begin(), legalSk.end(), maxYCmp);
 		addCoordSafety(as_max_y + 0.0001, false, false);
 	}
@@ -140,8 +140,6 @@ bool SilkScreenOutput::canAddstraightLine(double x1, double y1, double x2, doubl
 bool SilkScreenOutput::canAddAroundCrop(SilkSet &curSkst, double added, bool isLower, bool isX, SilkSet &sk) {
 	Silk &head = curSkst.sk[0];
 	Silk &tail = curSkst.sk[curSkst.sk.size() - 1];
-
-	
 
 	BoostPoint ptCheck;
 	double ptX, ptY;

@@ -53,8 +53,8 @@ int main()
 	silkscreenlen = atof(str.substr(14).c_str());
 	input >> str;
 
-	croppergap += 0.00001;
-	assemblygap += 0.00001;
+	croppergap += 0.0001;
+	assemblygap += 0.0001;
 	//assembly
 	while (1) {
 		input >> str;
@@ -90,15 +90,15 @@ int main()
 	BoostMultipolygon cropperMulLsBuffer;
 	buildAssemblyLine(assembly, assemblygap, multiCropperLs, croppergap, cropperMulLsBuffer, bgDiff);
 
-	printf("\n\n+------------------------------------------------------------------+\n\n");
+	//printf("\n\n+------------------------------------------------------------------+\n\n");
 	assembly.cyclePtCombe();
 	SilkScreenOutput silkScreenOutput(silkscreenlen, assemblygap, croppergap, bgAssembly, assembly.cyclePt, assemblyLs, cropperMulLsBuffer, multBGCropper);
 	
 	silkScreenOutput.ResultOutput(rFile, assembly, multBGCropper, bgDiff);
-	printf("SilkScreen CanWrite Size: %d\n", silkScreenOutput.canWrite.size());
-	for (double addSafety = 0.00005; addSafety <= 0.01000; addSafety += 0.00005) {
+	//printf("SilkScreen CanWrite Size: %d\n", silkScreenOutput.canWrite.size());
+	for (double addSafety = 0.00005; addSafety <= 0.0100; addSafety += 0.00005) {
 		if (!silkScreenOutput.isNeedModifty()) break;
-		printf("new-------------------------- %lf\n", addSafety);
+		//printf("new-------------------------- %lf\n", addSafety);
 
 		buildAssemblyLine(assembly, assemblygap + addSafety, multiCropperLs, croppergap + addSafety, cropperMulLsBuffer, bgDiff);
 		silkScreenOutput.modiftyTheIllegalSk(assembly, addSafety, bgDiff);
