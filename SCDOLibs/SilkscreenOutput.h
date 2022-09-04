@@ -34,6 +34,7 @@ private:
 	void addCoordSafety(double added, bool isLower, bool isX);
 	void addCoordSafetyLine(BoostLineString &addLs, vector<BoostLineString> &cropDiff, SilkSet &sk);
 	double lineWeight(SilkSet &sk);
+	double lineWeight(BoostLineString &ls);
 public:
 	double silkscreenlen, assemblygap, cropGap;
 	vector<BoostPolygon> cycleList;

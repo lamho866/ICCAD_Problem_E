@@ -65,13 +65,13 @@ bool SilkScreenOutput::isIlegealAddLine(double x1, double y1, double x2, double 
 	makeLine(addLsPoly, addLs);
 	//touches: Checks if two geometries have at least one touching point (tangent - non overlapping)
 	//intersects: Checks if two geometries have at least one intersection.
-	
+	/*
 	printf("try add line (%lf, %lf, %lf, %lf)\n", x1, y1, x2, y2);
 	printf("cond1 bg::intersects(addLs, bgAssemblyRef): %d\n", bg::intersects(addLs, bgAssemblyRef));
 	printf("cond2 bg::intersects(addLs, multBGCropperRef): %d\n", bg::intersects(addLs, multBGCropperRef));
 	printf("cond3 bg::intersects(addLs, cropperMulLsBufferRef): %d\n", bg::intersects(addLs, cropperMulLsBufferRef));
 	printf("cond4 !bg::touches(addLs, cropperMulLsBufferRef): %d\n\n", !bg::touches(addLs, cropperMulLsBufferRef));
-
+	*/
 	if (bg::intersects(addLs, bgAssemblyRef) || bg::intersects(addLs, multBGCropperRef)) return true;
 	if (bg::intersects(addLs, cropperMulLsBufferRef) && !bg::touches(addLs, cropperMulLsBufferRef)) return true;
 	return false;
@@ -88,19 +88,19 @@ void SilkScreenOutput::skStCoordSafety() {
 	skStCoordSetUp(legalSk);
 
 	if (skSt_min_x > as_min_x) {
-		printf("modify mix_x =====>\n");
+		//printf("modify mix_x =====>\n");
 		sort(legalSk.begin(), legalSk.end(), minXCmp);
 		addCoordSafety(as_min_x - 0.0001, true, true);
 	}
 	
 	if (skSt_max_x < as_max_x) {
-		printf("modify max_x =====>\n");
+		//printf("modify max_x =====>\n");
 		sort(legalSk.begin(), legalSk.end(), maxXCmp);
 		addCoordSafety(as_max_x + 0.0001, false, true);
 	}
 	
 	if (skSt_min_y > as_min_y) {
-		printf("modify min_y =====>\n");
+		//printf("modify min_y =====>\n");
 		sort(legalSk.begin(), legalSk.end(), minYCmp);
 		addCoordSafety(as_min_y - 0.0001, true, false);
 	}
@@ -113,9 +113,10 @@ void SilkScreenOutput::skStCoordSafety() {
 }
 
 void SilkScreenOutput::addCoordSafetyLine(BoostLineString &addLs, vector<BoostLineString> &cropDiff, SilkSet &sk) {
-	printf("cropDiff.size(): %d\n", cropDiff.size());
+	//printf("cropDiff.size(): %d\n", cropDiff.size());
 	for (int i = 0; i < cropDiff.size(); ++i) {
 		BoostLineString &cropAddLs = cropDiff[i];
+		//printf("[i] => %d, %d\n", bg::intersects(cropAddLs, addLs) ,!bg::intersects(cropAddLs, bgAssemblyRef));
 		if (bg::intersects(cropAddLs, addLs) && !bg::intersects(cropAddLs, bgAssemblyRef))
 		{
 			for (int k = 0; k < cropAddLs.size() - 1; ++k) {
@@ -144,16 +145,29 @@ bool SilkScreenOutput::canAddAroundCrop(SilkSet &curSkst, double added, bool isL
 	Silk &modiftPt = (isHead) ? head : tail;
 
 	BoostPoint ptCheck;
-	BoostPoint ptX(added, modiftPt.y1), ptY(modiftPt.x1, added);
-
+	double ptX, ptY;
 	BoostLineString addLs;
-	BoostLineString addLsX{ { modiftPt.x1 , modiftPt.y1 },{ added, modiftPt.y1 } };
-	BoostLineString addLsY{ { modiftPt.x1 , modiftPt.y1 },{ modiftPt.x1, added } };
-	
 
+	if (isX) {
+		if ((modiftPt.x1 < modiftPt.x2) == isLower) ptX = modiftPt.x1, ptY = modiftPt.y1;
+		else ptX = modiftPt.x2, ptY = modiftPt.y2;
+		ptCheck = BoostPoint(added, ptY);
 
-	if (isX) addLs = addLsX, ptCheck = ptX;
-	else addLs = addLsY, ptCheck = ptY;
+		if (isLower)
+			addLs = BoostLineString{ { ptX + 0.0001, ptY },{ added, ptY } };
+		else
+			addLs = BoostLineString{ { ptX - 0.0001, ptY },{ added, ptY } };
+	}
+	else {
+		if ((modiftPt.y1 < modiftPt.y2) == isLower) ptX = modiftPt.x1, ptY = modiftPt.y1;
+		else ptX = modiftPt.x2, ptY = modiftPt.y2;
+		ptCheck = BoostPoint(ptX, added);
+
+		if (isLower)
+			addLs = BoostLineString{ { ptX, ptY + 0.0001 },{ ptX, added } };
+		else
+			addLs = BoostLineString{ { ptX, ptY - 0.0001 },{ ptX, added } };
+	}
 	
 	for (int i = 0; i < cropperMulLsBufferRef.size(); ++i) {
 		if (bg::intersects(addLs, cropperMulLsBufferRef[i]) && 
@@ -167,10 +181,56 @@ bool SilkScreenOutput::canAddAroundCrop(SilkSet &curSkst, double added, bool isL
 			if (cropDiff.size() == 0) continue;
 
 			addCoordSafetyLine(addLs, cropDiff, sk);
-			return true;
+			if(sk.sk.size() != 0)
+				return true;
 		}
 	}
-	return false;
+	//printf("Using final addCropper way!!\n");
+	int minIdx = 0;
+	double minDist = bg::distance(ptCheck, cropperMulLsBufferRef[0]);
+	for (int i = 1; i < cropperMulLsBufferRef.size(); ++i) {
+		double curDist = bg::distance(ptCheck, cropperMulLsBufferRef[i]);
+		if (curDist < minDist) {
+			minDist = curDist;
+			minIdx = i;
+		}
+	}
+
+	vector<BoostLineString> cropDiff;
+	if (isX) {
+		if (isLower) ptX -= 0.0001;
+		else ptX += 0.0001;
+
+		specialCutWithCrop(cropperMulLsBufferRef[minIdx], added, ptX, isX, cropDiff);
+		addLs = BoostLineString{ { added, as_max_y },{ added, as_min_y } };
+	}
+	else {
+		if (isLower) ptY -= 0.0001;
+		else ptY += 0.0001;
+
+		specialCutWithCrop(cropperMulLsBufferRef[minIdx], added, ptY, isX, cropDiff);
+		addLs = BoostLineString{ { as_min_x, added },{ as_max_x, added } };
+	}
+
+	if (cropDiff.size() == 0) return false;
+
+	double minW = 999999.0;
+	double idx = -1;
+	for (int i = 0; i < cropDiff.size(); ++i) {
+		BoostLineString &cropAddLs = cropDiff[i];
+		double curW = lineWeight(cropAddLs);
+		if (!bg::intersects(cropAddLs, bgAssemblyRef) && lineIsLegal(cropAddLs) && curW < minW)
+		{
+			minW = curW;
+			idx = i;
+		}
+	}
+	if (idx == -1) return false;
+	for (int k = 0; k < cropDiff[idx].size() - 1; ++k) {
+		drawLine(cropDiff[idx], k, sk);
+	}
+
+	return true;
 }
 
 double SilkScreenOutput::lineWeight(SilkSet &sk) {
@@ -178,6 +238,13 @@ double SilkScreenOutput::lineWeight(SilkSet &sk) {
 	BoostLineString bgLineStr = sk.bgLineStr();
 	skCropIsUnValue(bgLineStr, multBGCropperRef, cropGap, cropDist);
 	skAssIsUnValue(bgLineStr, bgAssemblyRef, assemblygap, assDist);
+	return cropDist + assDist;
+}
+
+double SilkScreenOutput::lineWeight(BoostLineString &ls) {
+	double assDist, cropDist;
+	skCropIsUnValue(ls, multBGCropperRef, cropGap, cropDist);
+	skAssIsUnValue(ls, bgAssemblyRef, assemblygap, assDist);
 	return cropDist + assDist;
 }
 
@@ -228,8 +295,8 @@ bool SilkScreenOutput::lineIsLegal(BoostLineString ls) {
 	double cropDist, assDist;
 	bool isCropValue = !skCropIsUnValue(ls, multBGCropperRef, cropGap, cropDist);
 	bool isAssValue = !skAssIsUnValue(ls, bgAssemblyRef, assemblygap, assDist);
-	printf("assDist: %lf, cropDist: %lf\n", assDist, cropDist);
-	printf("isCropValue: %d, isAssValue: %d\n", isCropValue, isAssValue);
+	//printf("assDist: %lf, cropDist: %lf\n", assDist, cropDist);
+	//printf("isCropValue: %d, isAssValue: %d\n", isCropValue, isAssValue);
 	return isCropValue && isAssValue;
 }
 
@@ -269,8 +336,8 @@ void SilkScreenOutput::modiftyTheIllegalSk(Polygom &assembly, double addSafety, 
 	if (illegalSk.size() == 0) return;
 	double curClose = 9999.0;
 	for (int i = 0; i < illegalSk.size(); ++i) {
-		printf("illegal[%d]:\n", i);
-		printf("line: %d, arc: %d\n", illegalSk[i].line, illegalSk[i].arc);
+		//printf("illegal[%d]:\n", i);
+		//printf("line: %d, arc: %d\n", illegalSk[i].line, illegalSk[i].arc);
 		bool finded = false;
 		double dist;
 		BoostLineString rpSk;
@@ -293,8 +360,8 @@ void SilkScreenOutput::modiftyTheIllegalSk(Polygom &assembly, double addSafety, 
 		else {
 			illegalSk[i] = skStTemp[0];
 		}
-		if (finded) printf("finded\n\n");
-		else printf("minClose:%lf,  not finded\n\n", dist);
+		/*if (finded) printf("finded\n\n");
+		else printf("minClose:%lf,  not finded\n\n", dist);*/
 	}
 }
 
