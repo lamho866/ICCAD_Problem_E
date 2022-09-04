@@ -18,6 +18,8 @@ typedef bg::model::polygon<BoostPoint> BoostPolygon;
 typedef bg::model::multi_polygon<BoostPolygon> BoostMultipolygon;
 typedef bg::model::multi_linestring<BoostLineString> BoostMultiLineString;
 
+void cropOuterLs(BoostPolygon crop, BoostLineString &outerLs);
+void specialCutWithCrop(BoostPolygon crop, double tagA, double tagB, bool isX, vector<BoostLineString> &cropDiff);
 void makeSafetyWithCrop(BoostPolygon crop, double tagX, double tagY, vector<BoostLineString> &cropDiff);
 
 bool cutState(double x, double y, double tag, double isX);

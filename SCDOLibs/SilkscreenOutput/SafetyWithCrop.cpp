@@ -5,17 +5,29 @@ boost::geometry::strategy::buffer::end_flat endStr;
 boost::geometry::strategy::buffer::side_straight sideStr;
 boost::geometry::strategy::buffer::point_circle pointStr;
 
-void makeSafetyWithCrop(BoostPolygon crop, double tagX, double tagY, vector<BoostLineString> &cropDiff) {
+void cropOuterLs(BoostPolygon crop, BoostLineString &outerLs) {
 	string strLs = boost::lexical_cast<std::string>(bg::wkt(crop.outer()));
 	string outStr = strLs.substr(9, strLs.size() - 11);
-	BoostLineString outerLs;
 	bg::read_wkt("LINESTRING(" + outStr + ")", outerLs);
+}
+
+void specialCutWithCrop(BoostPolygon crop, double tagA, double tagB, bool isX, vector<BoostLineString> &cropDiff) {
+	BoostLineString outerLs;
+	cropOuterLs(crop, outerLs);
+	cropDiff.push_back(outerLs);
+	cutCrop(tagA, isX, false, cropDiff);
+	cutCrop(tagB, isX, true, cropDiff);
+}
+
+void makeSafetyWithCrop(BoostPolygon crop, double tagX, double tagY, vector<BoostLineString> &cropDiff) {
+	BoostLineString outerLs;
+	cropOuterLs(crop, outerLs);
 	cropDiff.push_back(outerLs);
 
 	cutCrop(tagY, false, false, cropDiff);
-	printf("cutSize ft: %d\n", cropDiff.size());
+	//printf("cutSize ft: %d\n", cropDiff.size());
 	cutCrop(tagX, true, true, cropDiff);
-	printf("cutSize sd: %d\n", cropDiff.size());
+	//printf("cutSize sd: %d\n", cropDiff.size());
 }
 
 bool cutState(double x, double y, double tag, double isX) {
