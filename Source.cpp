@@ -53,8 +53,8 @@ int main()
 	silkscreenlen = atof(str.substr(14).c_str());
 	input >> str;
 
-	croppergap += 0.00001;
-	assemblygap += 0.00001;
+	croppergap += 0.0001;
+	assemblygap += 0.0001;
 	//assembly
 	while (1) {
 		input >> str;
@@ -90,38 +90,26 @@ int main()
 	BoostMultipolygon cropperMulLsBuffer;
 	buildAssemblyLine(assembly, assemblygap, multiCropperLs, croppergap, cropperMulLsBuffer, bgDiff);
 
-	printf("\n\n+------------------------------------------------------------------+\n\n");
+	//printf("\n\n+------------------------------------------------------------------+\n\n");
 	assembly.cyclePtCombe();
 	SilkScreenOutput silkScreenOutput(silkscreenlen, assemblygap, croppergap, bgAssembly, assembly.cyclePt, assemblyLs, cropperMulLsBuffer, multBGCropper);
 	
 	silkScreenOutput.ResultOutput(rFile, assembly, multBGCropper, bgDiff);
-	printf("SilkScreen CanWrite Size: %d\n", silkScreenOutput.canWrite.size());
-	for (double addSafety = 0.00005; addSafety <= 0.01000; addSafety += 0.00005) {
+	//printf("SilkScreen CanWrite Size: %d\n", silkScreenOutput.canWrite.size());
+	for (double addSafety = 0.00005; addSafety <= 0.0100; addSafety += 0.00005) {
 		if (!silkScreenOutput.isNeedModifty()) break;
-		printf("new-------------------------- %lf\n", addSafety);
+		//printf("new-------------------------- %lf\n", addSafety);
 
 		buildAssemblyLine(assembly, assemblygap + addSafety, multiCropperLs, croppergap + addSafety, cropperMulLsBuffer, bgDiff);
 		silkScreenOutput.modiftyTheIllegalSk(assembly, addSafety, bgDiff);
 	}
 
 	multiCropperBuffer(multiCropperLs, croppergap + 0.00005, cropperMulLsBuffer);
-	/*
-	if (silkScreenOutput.legalSk.size() == 0) {
-		printf("legalSilkscreen is 0!!!!!!\n");
-		printf("=====> use illegalSk <=======\n");
-		silkScreenOutput.legalSk = silkScreenOutput.illegalSk;
-	}*/
-	/*for (int i = 0; i < silkScreenOutput.illegalSk.size(); ++i)
-		silkScreenOutput.legalSk.push_back(silkScreenOutput.illegalSk[i]);
-		*/
 	silkScreenOutput.skStCoordSafety();
 	silkScreenOutput.write(rFile);
 
 	//Final process way, if legalSk == 0
 	if (!silkScreenOutput.isLegalSkValue()) {
-		printf("\n+===============------------------------===============+\n");
-		printf("+=====----------Using Final Process!!!!!----------=====+\n");
-		printf("+===============------------------------===============+\n\n");
 		BoostLineString outerLs;
 		buildTheCombineLine(assemblygap, croppergap, bgAssembly, cropperMulLsBuffer, outerLs);
 		if (outerLs.size() != 0) {
@@ -129,41 +117,5 @@ int main()
 			silkScreenOutput.write(rFile);
 		}
 	}
-	
-	//GraphDraw
-	checkoutPutResult(rFile, assembly, bgAssembly, multBGCropper, cropperMulLsBuffer, silkScreenOutput.cycleList);
-	resultSample(rFile, assembly, bgAssembly, multBGCropper, cropperMulLsBuffer, silkScreenOutput.cycleList, bgDiff, silkscreenlen);
-
-	//ScoreCheck
-	ScoreCheck scoreCheck(pFile, rFile);
-	scoreCheck.showScoreResult();
-	/*
-	printf("\n\n");
-	for (int i = 0; i < assembly.cyclePt.size(); ++i) {
-		Cycle &tempC = assembly.cyclePt[i];
-		printf("c(%.4lf, %.4lf), stDeg: %.4lf, edDeg: %.4lf\n", tempC.rx, tempC.ry, tempC.stDeg, tempC.edDeg);
-	}
-	*/
-
-
-	/*
-	ofstream resultFile(rFile + ".txt");
-	vector<SilkSet> &illegalSk = silkScreenOutput.illegalSk;
-	printf("\n\n");
-	for (int i = 0; i < illegalSk.size(); ++i) {
-		SilkSet skSt = illegalSk[i];
-		double assDist, cropDist;
-		printf("illegal[%d]:\n", i);
-		printf("line: %d, arc:%d\n", skSt.line, skSt.arc);
-		BoostLineString lineStr = skSt.bgLineStr();
-		skCropIsUnValue(lineStr, multBGCropper, croppergap, cropDist);
-		skAssIsUnValue(lineStr, bgAssembly, assemblygap, assDist);
-		printf("assDist: %lf, cropDist: %lf\n\n", assDist, cropDist);
-
-		resultFile << "silkscreen\n";
-		skSt.write(resultFile);
-	}
-	resultFile.close();
-	*/
-	system("pause");
+	//system("pause");
 }

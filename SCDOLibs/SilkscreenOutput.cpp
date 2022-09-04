@@ -84,7 +84,7 @@ bool SilkScreenOutput::isIlegealAddLine(double x1, double y1, double x2, double 
 }
 
 void SilkScreenOutput::skStCoordSafety() {
-	printf("Stop\n");
+	//printf("Stop\n");
 	skStCoordSetUp(legalSk);
 
 	if (skSt_min_x > as_min_x) {
@@ -141,8 +141,6 @@ bool SilkScreenOutput::canAddAroundCrop(SilkSet &curSkst, double added, bool isL
 	Silk &head = curSkst.sk[0];
 	Silk &tail = curSkst.sk[curSkst.sk.size() - 1];
 
-	
-
 	BoostPoint ptCheck;
 	double ptX, ptY;
 	BoostLineString addLs;
@@ -190,7 +188,7 @@ bool SilkScreenOutput::canAddAroundCrop(SilkSet &curSkst, double added, bool isL
 				return true;
 		}
 	}
-	printf("Using final addCropper way!!\n");
+	//printf("Using final addCropper way!!\n");
 	int minIdx = 0;
 	double minDist = bg::distance(ptCheck, cropperMulLsBufferRef[0]);
 	for (int i = 1; i < cropperMulLsBufferRef.size(); ++i) {
