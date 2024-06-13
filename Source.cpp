@@ -132,7 +132,7 @@ int main()
 	
 	//GraphDraw
 	checkoutPutResult(rFile, assembly, bgAssembly, multBGCropper, cropperMulLsBuffer, silkScreenOutput.cycleList);
-	resultSample(rFile, assembly, bgAssembly, multBGCropper, cropperMulLsBuffer, silkScreenOutput.cycleList, bgDiff, silkscreenlen);
+	// resultSample(rFile, assembly, bgAssembly, multBGCropper, cropperMulLsBuffer, silkScreenOutput.cycleList, bgDiff, silkscreenlen);
 
 	//ScoreCheck
 	ScoreCheck scoreCheck(pFile, rFile);
@@ -145,7 +145,7 @@ int main()
 	}
 	*/
 
-
+	//Output illegalSk
 	/*
 	ofstream resultFile(rFile + ".txt");
 	vector<SilkSet> &illegalSk = silkScreenOutput.illegalSk;
@@ -165,5 +165,5 @@ int main()
 	}
 	resultFile.close();
 	*/
-	system("pause");
+	// system("pause");
 }
