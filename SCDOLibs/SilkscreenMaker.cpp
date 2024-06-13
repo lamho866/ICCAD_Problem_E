@@ -72,8 +72,8 @@ void modifyStartPoint(T &ls, const double tagX, const double tagY) {
 
 			connectAB(lineA, lineB, resX, resY);
 
-			ls[i].set<0>(resX);
-			ls[i].set<1>(resY);
+			bg::set<0>(ls[i], resX);// ls[i].set<0>(resX);
+			bg::set<1>(ls[i], resY);// ls[i].set<1>(resY);
 
 			//makeIt is Close Polygon:
 			ls.push_back(ls[0]);
